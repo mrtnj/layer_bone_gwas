@@ -42,6 +42,8 @@ comb <- read_data("mdb_dump/combs.txt")
 
 pheno <- Reduce(full_join, list(breaking, covariates, weight, comb))
 
+saveRDS(pheno,
+        file = "outputs/pheno.Rds")
 
 
 ## Order phenotype data
@@ -65,9 +67,17 @@ geno <- read_tsv("RA-1698_181010_ResultReport/RA-1698_181010_ResultReport_PCF_TO
 
 geno <- geno[order(geno$individual),]
 
+
+## High missingness individuals to exclude
+
+ids_high_missingness <- scan("outputs/ids_high_missingness.txt")
+
+geno_pruned <- filter(geno, !(individual %in% ids_high_missingness))
+
+
 ## Format genotypes for converting to plink compound ped
 
-geno_compound <- as.data.frame(geno)
+geno_compound <- as.data.frame(geno_pruned)
 
 for (col_ix in 2:ncol(geno)) {
     geno_compound[, col_ix] <- sub(geno_compound[, col_ix],
