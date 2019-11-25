@@ -47,32 +47,35 @@ new_snps <- merge(new_positions,
 
 
 
+## Remove duplicates, SNPs aligned in more than two blocks,
+## and SNPs where the alignment doesn't include the SNP position
+duplicate_alignments <- new_snps$ID[which(duplicated(new_snps$ID))]
+
+new_snps_pruned <- filter(new_snps,
+                          !ID %in% duplicate_alignments &
+                          blockCount < 3 &
+                          qStart <= position.in.seq &
+                          qEnd >= position.in.seq)
+
 ## Based on the alignments, find the genomic position of the snp.
 
 ## (Assumes each alignment has at most one gap.)
 
 find.new.position <- function(snp) {
-  blocks <- as.numeric(strsplit(snp$blockSizes, split=",")[[1]])
-  starts <- as.numeric(strsplit(snp$tStarts, split=",")[[1]])
-  position <- NA
-
-  if (blocks[1] >= snp$position.in.seq) {
-      position <- starts[1] + snp$position.in.seq
-  } else if (blocks[1] < snp$position.in.seq) {
-      position <- starts[2] + snp$position.in.seq - blocks[1] - 2
-  }
-  position
+    blocks <- as.numeric(strsplit(snp$blockSizes, split=",")[[1]])
+    ## In cases where the alignment starts a while into the query sequence,
+    ## get the offset
+    offset <- snp$qStart
+    starts <- as.numeric(strsplit(snp$tStarts, split=",")[[1]])
+    position <- NA
+    
+    if (offset + blocks[1] >= snp$position.in.seq) {
+        position <- starts[1] + snp$position.in.seq - offset
+    } else if (offset + blocks[1] < snp$position.in.seq) {
+        position <- starts[2] + snp$position.in.seq - offset - blocks[1] - 2
+    }
+    position
 }
-
-
-## Remove duplicates and poorly aligned SNPs
-duplicate_alignments <- new_snps$ID[which(duplicated(new_snps$ID))]
-
-
-new_snps_pruned <- filter(new_snps,
-                          !ID %in% duplicate_alignments &
-                          blockCount < 3)
-
 
 
 new_snps_pruned$new.pos <- unlist(plyr::alply(new_snps_pruned, 1, find.new.position))
@@ -80,6 +83,8 @@ new_snps_pruned$new.chr <- new_snps_pruned$tName
 
 write.csv(new_snps_pruned, file = "outputs/map_Galgal6.csv")
 
+
+## Format map
 
 map <- data.frame(chr = new_snps_pruned$new.chr,
                   identifier = new_snps_pruned$ID,
@@ -90,7 +95,7 @@ map <- data.frame(chr = new_snps_pruned$new.chr,
 
 
 map_numeric_chr <- filter(map, chr %in% 1:33)
-map_numeric_chr <- map_numeric_chr[order(map_numeric_chr$chr,
+map_numeric_chr <- map_numeric_chr[order(as.numeric(map_numeric_chr$chr),
                                          map_numeric_chr$position_bp),]
 
 map_zwm <- filter(map, chr %in% c("Z", "W", "M"))
