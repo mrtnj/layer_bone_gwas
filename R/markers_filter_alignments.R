@@ -1,5 +1,6 @@
 ## Parse blat output to place SNPs on Galgal6
 
+library(dplyr)
 
 source("R/blat.wrapper.R")
 
@@ -63,9 +64,55 @@ find.new.position <- function(snp) {
   position
 }
 
-library(plyr)
 
-new_snps$new.pos <- unlist(alply(new_snps, 1, find.new.position))
-new_snps$new.chr <- new_snps$tName
+## Remove duplicates and poorly aligned SNPs
+duplicate_alignments <- new_snps$ID[which(duplicated(new_snps$ID))]
 
-write.csv(new_snps, file = "outputs/map_Galgal6.csv")
+
+new_snps_pruned <- filter(new_snps,
+                          !ID %in% duplicate_alignments &
+                          blockCount < 3)
+
+
+
+new_snps_pruned$new.pos <- unlist(plyr::alply(new_snps_pruned, 1, find.new.position))
+new_snps_pruned$new.chr <- new_snps_pruned$tName
+
+write.csv(new_snps_pruned, file = "outputs/map_Galgal6.csv")
+
+
+map <- data.frame(chr = new_snps_pruned$new.chr,
+                  identifier = new_snps_pruned$ID,
+                  genetic_position_dummy = 0,
+                  position_bp = new_snps_pruned$new.pos,
+                  stringsAsFactors = FALSE)
+
+
+
+map_numeric_chr <- filter(map, chr %in% 1:33)
+map_numeric_chr <- map_numeric_chr[order(map_numeric_chr$chr,
+                                         map_numeric_chr$position_bp),]
+
+map_zwm <- filter(map, chr %in% c("Z", "W", "M"))
+map_zwm <- map_zwm[order(map_zwm$chr,
+                         map_zwm$position_bp),]
+
+map_un <- filter(map, grepl("Un_", chr))
+map_un <- map_un[order(map_un$chr,
+                       map_un$position_bp),]
+
+plink_map <- rbind(map_numeric_chr,
+                   map_zwm,
+                   map_un)
+
+write.table(plink_map,
+            file = "gwas/cage.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
+
+write.table(plink_map,
+            file = "gwas/pen.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
