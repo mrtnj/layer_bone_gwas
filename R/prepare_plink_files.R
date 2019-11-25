@@ -61,11 +61,25 @@ cage <- filter(pheno,
                !is.na(breed))
 
 
-
 geno <- read_tsv("RA-1698_181010_ResultReport/RA-1698_181010_ResultReport_PCF_TOP/RA-1698_181010_SNPGenotypeExport_PCF_TOP.txt",
                  col_types = cols(.default = "c", individual = "n"))
 
 geno <- geno[order(geno$individual),]
+
+
+## Get the map
+
+map <- read_delim("gwas/pen.map",
+                  delim = " ",
+                  col_names = FALSE,
+                  col_types = "cccn")
+
+col_ix <- c(1, na.exclude(match(map$X2, colnames(geno))))
+
+geno <- geno[, col_ix]
+
+assert_that(identical(colnames(geno)[-1],
+            map$X2))
 
 
 ## High missingness individuals to exclude
@@ -82,7 +96,7 @@ geno_compound <- as.data.frame(geno_pruned)
 for (col_ix in 2:ncol(geno)) {
     geno_compound[, col_ix] <- sub(geno_compound[, col_ix],
                                    pattern = "/",
-                                   replacement = "")
+                                   replacement = " ")
 }
 
 
@@ -134,6 +148,7 @@ ped <- function(df) data.frame(fid = df$individual,
                                father = 0,
                                mother = 0,
                                sex = 2,
+                               trait = 0,
                                df[, -1],
                                stringsAsFactors = FALSE)
 
@@ -162,8 +177,14 @@ write_plink <- function(x, filename) write.table(x,
                                                  file = filename,
                                                  quote = FALSE,
                                                  row.names = FALSE,
-                                                 col.names = FALSE,
-                                                 na = "-9")
+                                                 col.names = FALSE)
+
+write_ped <- function(x, filename) write.table(x,
+                                               file = filename,
+                                               quote = FALSE,
+                                               row.names = FALSE,
+                                               col.names = FALSE,
+                                               na = "0 0")
 
 write_plink(fam_pen_load, "gwas/fam_pen_load.fam")
 write_plink(fam_cage_load, "gwas/fam_cage_load.fam")
@@ -177,5 +198,5 @@ write_plink(covar_cage_breed_weight, "gwas/covar_cage_breed_weight.txt")
 write_plink(covar_pen_breed, "gwas/covar_pen_breed.txt")
 write_plink(covar_cage_breed, "gwas/covar_cage_breed.txt")
 
-write_plink(ped_pen, "gwas/pen.ped")
-write_plink(ped_cage, "gwas/cage.ped")
+write_ped(ped_pen, "gwas/pen.ped")
+write_ped(ped_cage, "gwas/cage.ped")
