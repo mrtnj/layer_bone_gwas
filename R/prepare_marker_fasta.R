@@ -22,3 +22,7 @@ fasta <- DNAStringSet(seq)
 
 writeXStringSet(fasta,
                 file = "alignment/source_seq.fasta")
+write.table(annotation[, c("Name", "Chr", "MapInfo", "SourceSeq")],
+            file = "alignment/source_seq.txt",
+            sep = "\t",
+            row.names = FALSE)
