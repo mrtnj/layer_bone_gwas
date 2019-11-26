@@ -52,6 +52,10 @@ run_gwas pen_weight \
 	 fam_pen_weight.fam \
 	 covar_pen_breed.txt
 
+run_gwas pen_comb_adj \
+	 pen \
+	 fam_pen_comb.fam \
+	 covar_pen_breed_weight.txt
 
 
 run_gwas cage_load_adj \
@@ -68,3 +72,8 @@ run_gwas cage_weight \
 	 cage \
 	 fam_cage_weight.fam \
 	 covar_cage_breed.txt
+
+run_gwas cage_comb_adj \
+	 cage \
+	 fam_cage_comb.fam \
+	 covar_cage_breed_weight.txt
