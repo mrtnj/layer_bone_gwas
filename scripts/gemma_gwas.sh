@@ -25,14 +25,24 @@ function run_gwas () {
 	ln -s ../$PLINK_BASE.bed $NAME.bed
 	ln -s ../$PLINK_BASE.map $NAME.map
 	ln -s ../$TRAIT_FILE $NAME.fam
-	ln -s ../$COVAR_FILE covar_$NAME.txt
+	if [ COVAR_FILE != "NULL" ]; then
+	    ln -s ../$COVAR_FILE covar_$NAME.txt
+	fi
     fi
 
-    $GEMMA_PATH/gemma -bfile $NAME \
-		      -k ../output/${PLINK_BASE}_grm.cXX.txt \
-		      -c covar_$NAME.txt \
-		      -lmm 4 \
-		      -o $NAME
+    if [ $COVAR_FILE != "NULL" ]; then
+	$GEMMA_PATH/gemma -bfile $NAME \
+			  -k ../output/${PLINK_BASE}_grm.sXX.txt \
+			  -c covar_$NAME.txt \
+			  -lmm 4 \
+			  -o $NAME
+    fi
+    if [ $COVAR_FILE == "NULL" ]; then
+	$GEMMA_PATH/gemma -bfile $NAME \
+			  -k ../output/${PLINK_BASE}_grm.sXX.txt \
+			  -lmm 4 \
+			  -o $NAME
+    fi
     
     cd ../..
 }
@@ -77,3 +87,46 @@ run_gwas cage_comb_adj \
 	 cage \
 	 fam_cage_comb.fam \
 	 covar_cage_breed_weight.txt
+
+
+## Breed-separated
+
+run_gwas bovans_pen_load_adj \
+	 bovans_pen \
+	 fam_bovans_pen_load.fam \
+	 covar_bovans_pen_weight.txt
+
+run_gwas bovans_pen_load \
+	 bovans_pen \
+	 fam_bovans_pen_load.fam \
+	 NULL
+
+run_gwas bovans_cage_load_adj \
+	 bovans_cage \
+	 fam_bovans_cage_load.fam \
+	 covar_bovans_cage_weight.txt
+
+run_gwas bovans_cage_load \
+	 bovans_cage \
+	 fam_bovans_cage_load.fam \
+	 NULL
+
+run_gwas lsl_pen_load_adj \
+	 lsl_pen \
+	 fam_lsl_pen_load.fam \
+	 covar_lsl_pen_weight.txt
+
+run_gwas lsl_pen_load \
+	 lsl_pen \
+	 fam_lsl_pen_load.fam \
+	 NULL
+
+run_gwas lsl_cage_load_adj \
+	 lsl_cage \
+	 fam_lsl_cage_load.fam \
+	 covar_lsl_cage_weight.txt
+
+run_gwas lsl_cage_load \
+	 lsl_cage \
+	 fam_lsl_cage_load.fam \
+	 NULL
