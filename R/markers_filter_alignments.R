@@ -121,3 +121,27 @@ write.table(plink_map,
             row.names = FALSE,
             col.names = FALSE,
             quote = FALSE)
+
+write.table(plink_map,
+            file = "gwas/bovans_pen.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
+
+write.table(plink_map,
+            file = "gwas/bovans_cage.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
+
+write.table(plink_map,
+            file = "gwas/lsl_pen.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
+
+write.table(plink_map,
+            file = "gwas/lsl_cage.map",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE)
