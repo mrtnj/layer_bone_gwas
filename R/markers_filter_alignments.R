@@ -111,37 +111,7 @@ plink_map <- rbind(map_numeric_chr,
                    map_un)
 
 write.table(plink_map,
-            file = "gwas/cage.map",
-            row.names = FALSE,
-            col.names = FALSE,
-            quote = FALSE)
-
-write.table(plink_map,
-            file = "gwas/pen.map",
-            row.names = FALSE,
-            col.names = FALSE,
-            quote = FALSE)
-
-write.table(plink_map,
-            file = "gwas/bovans_pen.map",
-            row.names = FALSE,
-            col.names = FALSE,
-            quote = FALSE)
-
-write.table(plink_map,
-            file = "gwas/bovans_cage.map",
-            row.names = FALSE,
-            col.names = FALSE,
-            quote = FALSE)
-
-write.table(plink_map,
-            file = "gwas/lsl_pen.map",
-            row.names = FALSE,
-            col.names = FALSE,
-            quote = FALSE)
-
-write.table(plink_map,
-            file = "gwas/lsl_cage.map",
+            file = "gwas/map.map",
             row.names = FALSE,
             col.names = FALSE,
             quote = FALSE)

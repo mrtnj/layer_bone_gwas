@@ -6,6 +6,21 @@ set -eu
 
 ## Convert ped to bed with plink
 
+ln -s map.map gwas/all.map
+ln -s map.map gwas/cage.map
+ln -s map.map gwas/pen.map
+ln -s map.map gwas/bovans_pen.map
+ln -s map.map gwas/bovans_cage.map
+ln -s map.map gwas/lsl_pen.map
+ln -s map.map gwas/lsl_cage.map
+
+
+$PLINK_PATH/plink --allow-extra-chr \
+		  --chr-set 40 \
+		  --file gwas/all \
+		  --make-bed \
+		  --out gwas/all \
+		  --maf 0.0001
 
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
