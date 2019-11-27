@@ -47,6 +47,29 @@ function run_gwas () {
     cd ../..
 }
 
+
+run_gwas all_load_adj \
+	 all \
+	 fam_all_load.fam \
+	 covar_all_cagepen_breed_weight.txt
+
+run_gwas all_load \
+	 all \
+	 fam_all_load.fam \
+	 covar_all_cagepen_breed.txt
+
+run_gwas all_weight \
+	 all \
+	 fam_all_weight.fam \
+	 covar_all_cagepen_breed.txt
+
+run_gwas all_comb_adj \
+	 all \
+	 fam_all_comb.fam \
+	 covar_all_cagepen_breed_weight.txt
+
+
+
 run_gwas pen_load_adj \
 	 pen \
 	 fam_pen_load.fam \

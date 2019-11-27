@@ -9,6 +9,13 @@ set -eu
 
 cd gwas
 
+
+$GEMMA_PATH/gemma -bfile all \
+		  -gk 2 \
+		  -o all_grm
+
+## System-separated
+
 $GEMMA_PATH/gemma -bfile pen \
 		  -gk 2 \
 		  -o pen_grm
