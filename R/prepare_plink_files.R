@@ -83,6 +83,7 @@ geno <- read_tsv("RA-1698_181010_ResultReport/RA-1698_181010_ResultReport_PCF_TO
 geno <- geno[order(geno$individual),]
 
 
+
 ## Get the map
 
 map <- read_delim("gwas/pen.map",
@@ -115,6 +116,10 @@ for (col_ix in 2:ncol(geno)) {
                                    replacement = " ")
 }
 
+## Genotype of all
+
+geno_all <- geno_compound[na.exclude(match(pheno$animal_id, geno_compound$individual)),]
+
 
 ## Subset genotypes based on pen/cage
 
@@ -134,6 +139,9 @@ geno_lsl_cage <- geno_compound[na.exclude(match(lsl_cage$animal_id,
 
 ## Subset phenotypes based on genotypes
 
+all_genotyped <- filter(pheno,
+                        animal_id %in% geno_all$individual)
+
 pen_genotyped <- filter(pen,
                         animal_id %in% geno_pen$individual)
 cage_genotyped <- filter(cage,
@@ -152,6 +160,9 @@ lsl_cage_genotyped <- filter(lsl_cage,
 
 
 ## Check ids
+assert_that(identical(all_genotyped$animal_id,
+                      geno_all$individual))
+
 assert_that(identical(pen_genotyped$animal_id,
                       geno_pen$individual))
 assert_that(identical(cage_genotyped$animal_id,
@@ -176,6 +187,10 @@ fam <- function(df, trait) data.frame(fid = df$animal_id,
                                       mother = 0,
                                       sex = 2,
                                       as.data.frame(df[, trait]))
+
+fam_all_load <- fam(all_genotyped, "load_N")
+fam_all_weight <- fam(all_genotyped, "weight")
+fam_all_comb <- fam(all_genotyped, "comb_g")
 
 fam_pen_load <- fam(pen_genotyped, "load_N")
 fam_pen_weight <- fam(pen_genotyped, "weight")
@@ -214,6 +229,8 @@ ped <- function(df) data.frame(fid = df$individual,
                                df[, -1],
                                stringsAsFactors = FALSE)
 
+ped_all <- ped(geno_all)
+
 ped_pen <- ped(geno_pen)
 ped_cage <- ped(geno_cage)
 
@@ -225,6 +242,13 @@ ped_lsl_cage <- ped(geno_lsl_cage)
 
 
 ## Create covariate tables
+
+covar_all_cagepen_breed_weight <- model.matrix(~ cage.pen + breed + weight,
+                                               data = all_genotyped)
+
+covar_all_cagepen_breed <- model.matrix(~ cage.pen + breed,
+                                        data = all_genotyped)
+
 
 covar_pen_breed_weight <- model.matrix(~ breed + weight,
                                        data = pen_genotyped)
@@ -267,6 +291,10 @@ write_ped <- function(x, filename) write.table(x,
                                                na = "0 0")
 ## Fam
 
+write_plink(fam_all_load, "gwas/fam_all_load.fam")
+write_plink(fam_all_comb, "gwas/fam_all_comb.fam")
+write_plink(fam_all_weight, "gwas/fam_all_weight.fam")
+
 write_plink(fam_pen_load, "gwas/fam_pen_load.fam")
 write_plink(fam_cage_load, "gwas/fam_cage_load.fam")
 write_plink(fam_pen_weight, "gwas/fam_pen_weight.fam")
@@ -293,6 +321,9 @@ write_plink(fam_lsl_cage_comb, "gwas/fam_lsl_cage_comb.fam")
 
 ## Covariates
 
+write_plink(covar_all_cagepen_breed_weight, "gwas/covar_all_cagepen_breed_weight.txt")
+write_plink(covar_all_cagepen_breed, "gwas/covar_all_cagepen_breed.txt")
+
 write_plink(covar_pen_breed_weight, "gwas/covar_pen_breed_weight.txt")
 write_plink(covar_cage_breed_weight, "gwas/covar_cage_breed_weight.txt")
 write_plink(covar_pen_breed, "gwas/covar_pen_breed.txt")
@@ -305,6 +336,8 @@ write_plink(covar_lsl_cage_weight, "gwas/covar_lsl_cage_weight.txt")
 
 
 ## Ped
+
+write_ped(ped_all, "gwas/all.ped")
 
 write_ped(ped_pen, "gwas/pen.ped")
 write_ped(ped_cage, "gwas/cage.ped")
