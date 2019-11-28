@@ -50,6 +50,7 @@ saveRDS(pheno,
 pheno <- pheno[order(pheno$animal_id),]
 
 
+
 ## Fam and covariate files for cage/pen-separated and breed/cage/pen-separated GWAS
 
 pen <- filter(pheno,
@@ -86,7 +87,7 @@ geno <- geno[order(geno$individual),]
 
 ## Get the map
 
-map <- read_delim("gwas/pen.map",
+map <- read_delim("gwas/map.map",
                   delim = " ",
                   col_names = FALSE,
                   col_types = "cccn")
