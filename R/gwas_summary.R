@@ -2,6 +2,7 @@
 ## Read GWAS results and make graphs
 
 library(dplyr)
+library(egg)
 library(ggplot2)
 library(qqman)
 library(readr)
@@ -61,3 +62,80 @@ flatten_coordinates <- function(chr,
 
 gwas$global_pos <- flatten_coordinates(gwas$chr, gwas$ps, chr_lengths)
 
+
+chr_breaks <- summarise(group_by(gwas, chr),
+                        global_pos_break = min(global_pos))
+
+chr_breaks <- chr_breaks[match(preferred_order, chr_breaks$chr),]
+chr_breaks$chr_masked <- chr_breaks$chr
+chr_breaks$chr_masked[11:33] <- ""
+
+## Bone strength
+
+
+plot_manhattan <- function(data) {
+    chr_numbers <- as.numeric(factor(data$chr,
+                                     levels = unique(data$chr)))
+    data$chr_indicator <- factor(chr_numbers %% 2)
+
+    qplot(x = global_pos,
+          y = -log10(p_wald),
+          colour = chr_indicator,
+          size = I(0.5),
+          data = data) +
+        scale_x_continuous(breaks = chr_breaks$global_pos_break,
+                           labels = chr_breaks$chr_masked)
+}
+
+
+formatting <- list(geom_hline(yintercept = -log10(5e-8),
+                              colour = "red",
+                              linetype = 2),
+                   geom_hline(yintercept = -log10(1e-4),
+                              colour = "blue",
+                              linetype = 2),
+                   theme_bw(),
+                   theme(panel.grid = element_blank(),
+                         legend.position = "none"),
+                   scale_colour_manual(values = c("grey", "black")),
+                   xlab(""),
+                   ylab(""),
+                   ylim(0, 10))
+
+plot_manhattan_cage_load <- plot_manhattan(filter(gwas, scan_name == "cage_load_adj")) +
+    formatting +
+    ggtitle("Bone breaking strength (CAGE)")
+plot_manhattan_pen_load <- plot_manhattan(filter(gwas, scan_name == "pen_load_adj")) +
+    formatting +
+        ggtitle("Bone breaking strength (PEN)")
+plot_manhattan_all_load <- plot_manhattan(filter(gwas, scan_name == "all_load_adj")) +
+    formatting +
+    ggtitle("Bone breaking strength (JOINT)")
+
+
+plot_manhattan_cage_weight <- plot_manhattan(filter(gwas, scan_name == "cage_weight")) +
+    formatting +
+    ggtitle("Body weight (CAGE)")
+plot_manhattan_pen_weight <- plot_manhattan(filter(gwas, scan_name == "pen_weight")) +
+    formatting +
+    ggtitle("Body weight (PEN)")
+plot_manhattan_all_weight <- plot_manhattan(filter(gwas, scan_name == "all_weight")) +
+    formatting +
+    ggtitle("Body weight (JOINT)")
+
+
+plot_manhattan_combined <- ggarrange(plot_manhattan_cage_load,
+                                     plot_manhattan_pen_load,
+                                     plot_manhattan_all_load,
+                                     plot_manhattan_cage_weight,
+                                     plot_manhattan_pen_weight,
+                                     plot_manhattan_all_weight,
+                                     left = "Negative logarithm of p-value",
+                                     ncol = 2,
+                                     byrow = FALSE)
+
+
+
+pdf("figures/plot_manhattans.pdf")
+print(plot_manhattan_combined)
+dev.off()
