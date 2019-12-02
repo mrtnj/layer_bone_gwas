@@ -70,7 +70,9 @@ chr_breaks <- chr_breaks[match(preferred_order, chr_breaks$chr),]
 chr_breaks$chr_masked <- chr_breaks$chr
 chr_breaks$chr_masked[11:33] <- ""
 
-## Bone strength
+
+
+## Manhattan plots
 
 
 plot_manhattan <- function(data) {
@@ -138,4 +140,58 @@ plot_manhattan_combined <- ggarrange(plot_manhattan_cage_load,
 
 pdf("figures/plot_manhattans.pdf")
 print(plot_manhattan_combined)
+dev.off()
+
+
+
+## QQ-plots
+
+plot_qq <- function(p) {
+
+    Observed <- -log10(sort(p, decreasing = FALSE))
+    Expected <- -log10(ppoints(length(p)))
+
+    qplot(x = Expected,
+          y = Observed) +
+        geom_abline(intercept = 0, slope = 1) +
+        theme_bw() +
+        theme(panel.grid = element_blank())
+}
+
+
+plot_qq_cage_load <- plot_qq(filter(gwas, scan_name == "cage_load_adj")$p_wald) +
+    ggtitle("Bone breaking strength (CAGE)")
+
+plot_qq_pen_load <- plot_qq(filter(gwas, scan_name == "pen_load_adj")$p_wald) +
+    ggtitle("Bone breaking strength (PEN)")
+
+plot_qq_all_load <- plot_qq(filter(gwas, scan_name == "all_load_adj")$p_wald) +
+    ggtitle("Bone breaking strength (JOINT)")
+
+
+
+plot_qq_cage_weight <- plot_qq(filter(gwas, scan_name == "cage_weight")$p_wald) +
+    ggtitle("Body weight (CAGE)")
+
+plot_qq_pen_weight <- plot_qq(filter(gwas, scan_name == "pen_weight")$p_wald) +
+    ggtitle("Body weight (PEN)")
+
+plot_qq_all_weight <- plot_qq(filter(gwas, scan_name == "all_weight")$p_wald) +
+    ggtitle("Body weight (JOINT)")
+
+
+
+plot_qq_combined <- ggarrange(plot_qq_cage_load,
+                              plot_qq_pen_load,
+                              plot_qq_all_load,
+                              plot_qq_cage_weight,
+                              plot_qq_pen_weight,
+                              plot_qq_all_weight,
+                              ncol = 2,
+                              byrow = FALSE)
+
+
+
+pdf("figures/plot_qq.pdf")
+print(plot_qq_combined)
 dev.off()
