@@ -5,7 +5,7 @@
 library(dplyr)
 library(ggplot2)
 library(readr)
-
+library(tidyr)
 
 geno <- read_tsv("RA-1698_181010_ResultReport/RA-1698_181010_ResultReport_PCF_TOP/RA-1698_181010_SNPGenotypeExport_PCF_TOP.txt",
                  col_types = cols(.default = "c", individual = "n"))
@@ -152,7 +152,13 @@ pc_data_pruned <- data.frame(animal_id = imputed_pruned$individual, pca_pruned$x
 pc_pheno_pruned <- Reduce(function(x, y) inner_join(x, y, by = "animal_id"),
                           list(pheno, pc_data_pruned, missing_df))
 
-plot_pc12_pruned <- qplot(x = PC1, y = PC2, colour = breed, data = pc_pheno_pruned)
+plot_pc12_pruned <- qplot(x = PC1, y = PC2, colour = breed, data = pc_pheno_pruned) +
+    scale_colour_manual(values = c("blue", "red"),
+                        name = "") +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    ggtitle("Principal components of genotypes")
+                
 
 
 long_pc <- pivot_longer(pc_pheno_pruned,
@@ -164,3 +170,7 @@ plot_pcs_pen <- qplot(x = component, y = value, colour = pen.cage, data = long_p
 
 
 
+
+pdf("figures/plot_pcs.pdf")
+print(plot_pc12_pruned)
+dev.off()
