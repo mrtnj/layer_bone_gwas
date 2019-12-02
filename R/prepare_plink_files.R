@@ -104,7 +104,10 @@ assert_that(identical(colnames(geno)[-1],
 
 ids_high_missingness <- scan("outputs/ids_high_missingness.txt")
 
-geno_pruned <- filter(geno, !(individual %in% ids_high_missingness))
+id_strange_breed <- scan("ids_strange_breed_assignment.txt")
+
+geno_pruned <- filter(geno, !(individual %in% c(ids_high_missingness,
+                                                ids_strange_breed)))
 
 
 ## Format genotypes for converting to plink compound ped
