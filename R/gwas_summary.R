@@ -31,6 +31,23 @@ for (file_ix in 1:length(results)) {
 
 gwas <- Reduce(rbind, results)
 
+gwas$scan_name_pretty <- gwas$scan_name
+gwas$scan_name_pretty[gwas$scan_name_pretty == "cage_weight"] <- "Body weight (CAGE)"
+gwas$scan_name_pretty[gwas$scan_name_pretty == "pen_weight"] <- "Body weight (PEN)"
+gwas$scan_name_pretty[gwas$scan_name_pretty == "all_weight"] <- "Body weight (JOINT)"
+gwas$scan_name_pretty[gwas$scan_name_pretty == "all_load_adj"] <-
+    "Tibial breaking strength (JOINT)"
+gwas$scan_name_pretty[gwas$scan_name_pretty == "pen_load_adj"] <-
+    "Tibial breaking strength (PEN)"
+
+gwas$scan_name_pretty <- factor(gwas$scan_name_pretty,
+                                levels=c("Body weight (CAGE)",
+                                         "Body weight (PEN)",
+                                         "Body weight (JOINT)",
+                                         "Tibial breaking strength (PEN)",
+                                         "Tibial breaking strength (JOINT)"))
+
+gwas$chr_numeric <- as.numeric(gwas$chr)
 
 saveRDS(gwas,
         file = "outputs/gwas.Rds")
@@ -101,28 +118,33 @@ formatting <- list(geom_hline(yintercept = -log10(5e-8),
                          legend.position = "none"),
                    scale_colour_manual(values = c("grey", "black")),
                    xlab(""),
-                   ylab(""),
-                   ylim(0, 10))
+                   ylab(""))
 
 plot_manhattan_cage_load <- plot_manhattan(filter(gwas, scan_name == "cage_load_adj")) +
     formatting +
+    ylim(0, 10) +
     ggtitle("Bone breaking strength (CAGE)")
 plot_manhattan_pen_load <- plot_manhattan(filter(gwas, scan_name == "pen_load_adj")) +
     formatting +
-        ggtitle("Bone breaking strength (PEN)")
+    ylim(0, 10) +
+    ggtitle("Bone breaking strength (PEN)")
 plot_manhattan_all_load <- plot_manhattan(filter(gwas, scan_name == "all_load_adj")) +
     formatting +
+    ylim(0, 10) +
     ggtitle("Bone breaking strength (JOINT)")
 
 
 plot_manhattan_cage_weight <- plot_manhattan(filter(gwas, scan_name == "cage_weight")) +
     formatting +
+    ylim(0, 17) +
     ggtitle("Body weight (CAGE)")
 plot_manhattan_pen_weight <- plot_manhattan(filter(gwas, scan_name == "pen_weight")) +
     formatting +
+    ylim(0, 17) +
     ggtitle("Body weight (PEN)")
 plot_manhattan_all_weight <- plot_manhattan(filter(gwas, scan_name == "all_weight")) +
     formatting +
+    ylim(0, 17) +
     ggtitle("Body weight (JOINT)")
 
 
@@ -194,4 +216,128 @@ plot_qq_combined <- ggarrange(plot_qq_cage_load,
 
 pdf("figures/plot_qq.pdf")
 print(plot_qq_combined)
+dev.off()
+
+
+## Candidate regions
+
+significant <- filter(gwas, p_wald < 5e-8)
+
+significant_regions <- summarise(group_by(significant, chr, scan_name),
+                                 start = min(ps),
+                                 end = max(ps),
+                                 width = end - start,
+                                 mean_af = mean(af),
+                                 mean_beta = mean(beta),
+                                 mean_p = mean(p_wald),
+                                 n_markers = n())
+
+
+
+## Weight hits
+
+formatting_weight_hits <- list(geom_hline(yintercept = -log10(5e-8),
+                                          colour = "red",
+                                          linetype = 2),
+                               theme_bw(),
+                               theme(panel.grid = element_blank(),
+                                     strip.background = element_blank()),
+                               ylim(0, 17),
+                               xlab(""),
+                               ylab(""))
+
+chr4_weight <- filter(gwas, chr == 4 &
+                            ps >= 73994772 - 1e6 &
+                            ps <= 75850294 + 1e6 &
+                            grepl("weight", scan_name))
+
+plot_chr4 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr4_weight) +
+    facet_wrap(~ scan_name_pretty) +
+    ggtitle("Chromosome 4 locus") +
+    formatting_weight_hits
+
+chr6_weight <- filter(gwas, chr == 6 &
+                            ps >= 11403561 - 1e6 &
+                            ps <= 11588664 + 1e6 &
+                            grepl("weight", scan_name))
+
+plot_chr6 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr6_weight) +
+    facet_wrap(~ scan_name_pretty) +
+    ggtitle("Chromosome 6 locus") +
+    formatting_weight_hits
+
+chr27_weight <- filter(gwas, chr == 27 &
+                             ps >= 6070932 - 1e6 &
+                             ps <= 6147189 + 1e6 &
+                             grepl("weight", scan_name))
+
+plot_chr27 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr27_weight) +
+    facet_wrap(~ scan_name_pretty) +
+    ggtitle("Chromosome 27 locus") +
+    formatting_weight_hits
+
+
+
+plot_weight_hits <- ggarrange(plot_chr4,
+                              plot_chr6,
+                              plot_chr27,
+                              left = "Negative logarithm of p-value",
+                              bottom = "Position (Mbp)")
+
+pdf("figures/plot_gwas_weight_hits.pdf")
+print(plot_weight_hits)
+dev.off()
+
+
+## Load hits
+
+suggestive <- filter(gwas, p_wald < 1e-4)
+
+suggestive_regions <- summarise(group_by(suggestive, chr, scan_name),
+                                start = min(ps),
+                                end = max(ps),
+                                width = end - start,
+                                mean_af = mean(af),
+                                mean_beta = mean(beta),
+                                mean_p = mean(p_wald),
+                                n_markers = n())
+
+
+
+suggestive_load <- filter(suggestive_regions,
+                          scan_name %in% c("pen_load_adj", "cage_load_adj", "all_load_adj"))
+
+
+suggestive_load_list <- vector(mode = "list",
+                               length = nrow(suggestive_load))
+
+for (region_ix in 1:nrow(suggestive_load)) {
+    this_region <- gwas[gwas$scan_name == suggestive_load$scan_name[region_ix] &
+                        gwas$chr == suggestive_load$chr[region_ix] &
+                        gwas$ps >= suggestive_load$start[region_ix] - 1e6 &
+                        gwas$ps <= suggestive_load$start[region_ix] + 1e6,]
+    suggestive_load_list[[region_ix]] <- this_region
+}
+
+
+load_candidates <- Reduce(rbind, suggestive_load_list)
+
+formatting_load_hits <- list(geom_hline(yintercept = -log10(1e-4),
+                                          colour = "blue",
+                                          linetype = 2),
+                               theme_bw(),
+                               theme(panel.grid = element_blank(),
+                                     strip.background = element_blank()),
+                               ylim(0, 10),
+                               xlab("Position (Mbp)"),
+                               ylab("Negative logarithm of p-value"))
+
+plot_load_hits <- qplot(x = ps/1e6, y = -log10(p_wald), data = load_candidates) +
+    facet_wrap(~ chr_numeric + scan_name_pretty, scale = "free_x") +
+    formatting_load_hits
+    
+
+
+pdf("figures/plot_gwas_load_suggestive.pdf")
+print(plot_load_hits)
 dev.off()
