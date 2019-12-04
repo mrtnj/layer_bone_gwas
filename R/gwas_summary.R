@@ -7,6 +7,7 @@ library(ggplot2)
 library(qqman)
 library(readr)
 library(stringr)
+library(tidyr)
 
 
 ## Collate results
@@ -341,3 +342,95 @@ plot_load_hits <- qplot(x = ps/1e6, y = -log10(p_wald), data = load_candidates) 
 pdf("figures/plot_gwas_load_suggestive.pdf")
 print(plot_load_hits)
 dev.off()
+
+
+
+## Correlation between scans
+
+gwas_load_systems <- filter(gwas,
+                            scan_name %in% c("pen_load_adj", "cage_load_adj"))
+
+load_comparison <- pivot_wider(gwas_load_systems[, c("rs", "p_wald", "beta", "scan_name")],
+                               values_from = c("beta", "p_wald"),
+                               names_from = "scan_name")
+
+
+gwas_weight_systems <- filter(gwas,
+                            scan_name %in% c("pen_weight", "cage_weight"))
+
+weight_comparison <- pivot_wider(gwas_weight_systems[, c("rs", "p_wald", "beta", "scan_name")],
+                                 values_from = c("beta", "p_wald"),
+                                 names_from = "scan_name")
+
+formatting_comparison <- list(theme_bw(),
+                              theme(panel.grid = element_blank()),
+                              xlab("CAGE"),
+                              ylab("PEN"))
+
+
+plot_load_comparison_p <- qplot(x = -log10(p_wald_cage_load_adj),
+                                y = -log10(p_wald_pen_load_adj),
+                                data = filter(load_comparison,
+                                              p_wald_cage_load_adj < 1e-3 |
+                                              p_wald_pen_load_adj < 1e-3)) +
+    ggtitle("Tibial breaking strength \nNegative logarithm of p-value") +
+    formatting_comparison +
+    xlim(0, 10) +
+    ylim(0, 10)
+
+plot_load_comparison_beta <- qplot(x = beta_cage_load_adj,
+                                   y = beta_pen_load_adj,
+                                   data = filter(load_comparison,
+                                                 p_wald_cage_load_adj < 1e-3 |
+                                                 p_wald_pen_load_adj < 1e-3)) +
+    geom_hline(yintercept = 0, colour = "red", linetype = 2) +
+    geom_vline(xintercept = 0, colour = "red", linetype = 2) +
+    ggtitle("Tibial breaking strength \nEstimated marker effect") +
+    formatting_comparison
+
+
+plot_weight_comparison_p <- qplot(x = -log10(p_wald_cage_weight),
+                                  y = -log10(p_wald_pen_weight),
+                                  data = filter(weight_comparison,
+                                                p_wald_cage_weight < 1e-3 |
+                                                p_wald_pen_weight < 1e-3)) +
+    ggtitle("Body weight \nNegative logarithm of p-value") +
+    formatting_comparison +
+    xlim(0, 10) +
+    ylim(0, 10)
+
+plot_weight_comparison_beta <- qplot(x = beta_cage_weight,
+                                     y = beta_pen_weight,
+                                     data = filter(weight_comparison,
+                                                   p_wald_cage_weight < 1e-3 |
+                                                   p_wald_pen_weight < 1e-3)) +
+    geom_hline(yintercept = 0, colour = "red", linetype = 2) +
+    geom_vline(xintercept = 0, colour = "red", linetype = 2) +
+    ggtitle("Body weight \nEstimated marker effect") +
+    formatting_comparison
+
+
+plot_comparisons <- ggarrange(plot_load_comparison_p,
+                              plot_load_comparison_beta,
+                              plot_weight_comparison_p,
+                              plot_weight_comparison_beta)
+
+
+
+pdf("figures/plot_gwas_comparison.pdf")
+print(plot_comparisons)
+dev.off()
+
+cor.test(filter(weight_comparison,
+                p_wald_cage_weight < 1e-3 |
+                p_wald_pen_weight < 1e-3)$beta_cage_weight,
+         filter(weight_comparison,
+                p_wald_cage_weight < 1e-3 |
+                p_wald_pen_weight < 1e-3)$beta_pen_weight)
+
+cor.test(filter(load_comparison,
+                p_wald_cage_load_adj < 1e-3 |
+                p_wald_pen_load_adj < 1e-3)$beta_cage_load_adj,
+         filter(load_comparison,
+                p_wald_cage_load_adj < 1e-3 |
+                p_wald_pen_load_adj < 1e-3)$beta_pen_load_adj)
