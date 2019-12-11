@@ -104,7 +104,7 @@ assert_that(identical(colnames(geno)[-1],
 
 ids_high_missingness <- scan("outputs/ids_high_missingness.txt")
 
-id_strange_breed <- scan("ids_strange_breed_assignment.txt")
+ids_strange_breed <- scan("outputs/ids_strange_breed_assignment.txt")
 
 geno_pruned <- filter(geno, !(individual %in% c(ids_high_missingness,
                                                 ids_strange_breed)))
@@ -260,10 +260,16 @@ covar_pen_breed_weight <- model.matrix(~ breed + weight,
 covar_pen_breed <- model.matrix(~ breed,
                                 data = pen_genotyped)
 
+covar_pen_weight <- model.matrix(~ weight,
+                                data = pen_genotyped)
+
 covar_cage_breed_weight <- model.matrix(~ breed + weight,
                                         data = cage_genotyped)
 
 covar_cage_breed <- model.matrix(~ breed,
+                                 data = cage_genotyped)
+
+covar_cage_weight <- model.matrix(~ weight,
                                  data = cage_genotyped)
 
 covar_bovans_pen_weight <- model.matrix(~ weight,
@@ -332,6 +338,8 @@ write_plink(covar_pen_breed_weight, "gwas/covar_pen_breed_weight.txt")
 write_plink(covar_cage_breed_weight, "gwas/covar_cage_breed_weight.txt")
 write_plink(covar_pen_breed, "gwas/covar_pen_breed.txt")
 write_plink(covar_cage_breed, "gwas/covar_cage_breed.txt")
+write_plink(covar_pen_weight, "gwas/covar_pen_weight.txt")
+write_plink(covar_cage_weight, "gwas/covar_cage_weight.txt")
 
 write_plink(covar_bovans_pen_weight, "gwas/covar_bovans_pen_weight.txt")
 write_plink(covar_lsl_pen_weight, "gwas/covar_lsl_pen_weight.txt")
