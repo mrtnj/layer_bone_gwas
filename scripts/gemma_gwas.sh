@@ -90,6 +90,11 @@ run_gwas pen_comb_adj \
 	 fam_pen_comb.fam \
 	 covar_pen_breed_weight.txt
 
+run_gwas pen_load_weight \
+	 pen \
+	 fam_pen_load.fam \
+	 covar_pen_weight.txt
+
 
 run_gwas cage_load_adj \
 	 cage \
@@ -110,6 +115,11 @@ run_gwas cage_comb_adj \
 	 cage \
 	 fam_cage_comb.fam \
 	 covar_cage_breed_weight.txt
+
+run_gwas cage_load_weight \
+	 cage \
+	 fam_cage_load.fam \
+	 covar_cage_weight.txt
 
 
 ## Breed-separated
