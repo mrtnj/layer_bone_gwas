@@ -5,7 +5,12 @@ library(broom)
 library(dplyr)
 library(egg)
 library(ggplot2)
+library(readr)
 library(tidyr)
+
+
+source("R/gwas_helper_functions.R")
+
 
 
 pheno <- readRDS("outputs/pheno.Rds")
@@ -188,7 +193,7 @@ sim_groups <- function() {
     })
 }
 
-sim_group_size <- replicate(1000, sim_groups(), simplify = FALSE)
+sim_group_size <- replicate(100, sim_groups(), simplify = FALSE)
 
 
 
@@ -253,3 +258,31 @@ plot_max_min_histograms <- qplot(x = value, fill = cage.pen,
 plot_ranges_combined <- ggarrange(plot_group_ranges_bars,
                                   plot_max_min_histograms,
                                   heights = c(0.6, 0.4))
+
+
+## GWAS
+
+gwas_pen <- read_tsv("gwas/pen_comb_adj/output/pen_comb_adj.assoc.txt",
+                     col_types = "ccnnccnnnnnnnnn")
+gwas_cage <- read_tsv("gwas/cage_comb_adj/output/cage_comb_adj.assoc.txt",
+                      col_types = "ccnnccnnnnnnnnn")
+
+
+
+chr_lengths <- summarise(group_by(gwas_pen, chr), length = unique(max(ps)))
+preferred_order <- c(1:28, 30:31, 33, "Un_NW_020110160v1", "Un_NW_020110165v1", "Z")
+
+chr_lengths <- chr_lengths[match(preferred_order, chr_lengths$chr),]
+
+
+gwas_pen$global_pos <- flatten_coordinates(gwas_pen$chr, gwas_pen$ps, chr_lengths)
+gwas_cage$global_pos <- flatten_coordinates(gwas_cage$chr, gwas_cage$ps, chr_lengths)
+
+chr_breaks <- summarise(group_by(gwas_pen, chr),
+                        global_pos_break = min(global_pos))
+
+chr_breaks <- chr_breaks[match(preferred_order, chr_breaks$chr),]
+chr_breaks$chr_masked <- chr_breaks$chr
+chr_breaks$chr_masked[11:33] <- ""
+
+

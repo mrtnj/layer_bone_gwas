@@ -10,6 +10,8 @@ library(stringr)
 library(tidyr)
 
 
+
+
 ## Collate results
 
 files <- system("ls gwas/*/output/*assoc.txt", intern = TRUE)
@@ -62,22 +64,6 @@ preferred_order <- c(1:28, 30:31, 33, "Un_NW_020110160v1", "Un_NW_020110165v1", 
 
 chr_lengths <- chr_lengths[match(preferred_order, chr_lengths$chr),]
 
-flatten_coordinates <- function(chr,
-                                pos,
-                                chr_lengths) {
-    pos_flat <- pos
-    offset <- 0
- 
-    for (chr_ix in 1:nrow(chr_lengths)) {
-        on_chr <- chr == chr_lengths$chr[chr_ix]
-        pos_flat[on_chr] <- pos[on_chr] + offset
-        offset <- offset + chr_lengths$length[chr_ix]
-    }
- 
-    pos_flat
-}
-
-
 gwas$global_pos <- flatten_coordinates(gwas$chr, gwas$ps, chr_lengths)
 
 
@@ -91,22 +77,6 @@ chr_breaks$chr_masked[11:33] <- ""
 
 
 ## Manhattan plots
-
-
-plot_manhattan <- function(data) {
-    chr_numbers <- as.numeric(factor(data$chr,
-                                     levels = unique(data$chr)))
-    data$chr_indicator <- factor(chr_numbers %% 2)
-
-    qplot(x = global_pos,
-          y = -log10(p_wald),
-          colour = chr_indicator,
-          size = I(0.5),
-          data = data) +
-        scale_x_continuous(breaks = chr_breaks$global_pos_break,
-                           labels = chr_breaks$chr_masked)
-}
-
 
 formatting <- list(geom_hline(yintercept = -log10(5e-8),
                               colour = "red",
@@ -168,19 +138,6 @@ dev.off()
 
 
 ## QQ-plots
-
-plot_qq <- function(p) {
-
-    Observed <- -log10(sort(p, decreasing = FALSE))
-    Expected <- -log10(ppoints(length(p)))
-
-    qplot(x = Expected,
-          y = Observed) +
-        geom_abline(intercept = 0, slope = 1) +
-        theme_bw() +
-        theme(panel.grid = element_blank())
-}
-
 
 plot_qq_cage_load <- plot_qq(filter(gwas, scan_name == "cage_load_adj")$p_wald) +
     ggtitle("Bone breaking strength (CAGE)")
@@ -250,7 +207,7 @@ formatting_weight_hits <- list(geom_hline(yintercept = -log10(5e-8),
 chr4_weight <- filter(gwas, chr == 4 &
                             ps >= 73994772 - 1e6 &
                             ps <= 75850294 + 1e6 &
-                            grepl("weight", scan_name))
+                            scan_name %in% c("all_weight", "pen_weight", "cage_weight"))
 
 plot_chr4 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr4_weight) +
     facet_wrap(~ scan_name_pretty) +
@@ -260,7 +217,7 @@ plot_chr4 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr4_weight) +
 chr6_weight <- filter(gwas, chr == 6 &
                             ps >= 11403561 - 1e6 &
                             ps <= 11588664 + 1e6 &
-                            grepl("weight", scan_name))
+                            scan_name %in% c("all_weight", "pen_weight", "cage_weight"))
 
 plot_chr6 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr6_weight) +
     facet_wrap(~ scan_name_pretty) +
@@ -270,7 +227,7 @@ plot_chr6 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr6_weight) +
 chr27_weight <- filter(gwas, chr == 27 &
                              ps >= 6070932 - 1e6 &
                              ps <= 6147189 + 1e6 &
-                             grepl("weight", scan_name))
+                             scan_name %in% c("all_weight", "pen_weight", "cage_weight"))
 
 plot_chr27 <- qplot(x = ps/1e6, y = -log10(p_wald), data = chr27_weight) +
     facet_wrap(~ scan_name_pretty) +
@@ -434,3 +391,23 @@ cor.test(filter(load_comparison,
          filter(load_comparison,
                 p_wald_cage_load_adj < 1e-3 |
                 p_wald_pen_load_adj < 1e-3)$beta_pen_load_adj)
+
+
+## Tables
+
+significant_table <- significant[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
+
+
+write.csv(significant_table,
+          file = "tables/gwas_significant.csv",
+          quote = FALSE,
+          row.names = FALSE)
+
+
+suggestive_table <- suggestive_load[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
+
+
+write.csv(candidate_table,
+          file = "tables/gwas_suggestive.csv",
+          quote = FALSE,
+          row.names = FALSE)
