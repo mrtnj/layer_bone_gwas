@@ -162,7 +162,94 @@ dev.off()
 
 
 
-##
+## Investigating the min, max, and range of groups
+
+group_range <- function(pheno) {
+    summarise(group_by(pheno, group, cage.pen),
+              mean = mean(comb_residual),
+              min = min(comb_residual),
+              max = max(comb_residual),
+              range = max - min)
+}
+
+group_size <- as.data.frame(table(pheno$group),
+                            stringsAsFactors = FALSE)
+colnames(group_size) <- c("group", "size")
+group_size$cage.pen <- ifelse(group_size$group > 2000,
+                              "CAGE",
+                              "PEN")
 
 
-group_range <- summarise(group_by(pheno, group, cage.pen), mean = mean(comb_residual), min = min(comb_residual), max = max(comb_residual), range = max - min)
+
+sim_groups <- function() {
+    do(group_by(group_size, group, cage.pen), {
+        random_inds <- sample(1:nrow(pheno), .$size, replace = TRUE)
+        data.frame(comb_residual = pheno$comb_residual[random_inds])
+    })
+}
+
+sim_group_size <- replicate(1000, sim_groups(), simplify = FALSE)
+
+
+
+real_group_range <- group_range(pheno)
+sim_group_range <- lapply(sim_group_size, group_range)
+
+
+long_real_range <- pivot_longer(real_group_range, -c("group", "cage.pen"))
+long_sim_range <- pivot_longer(sim_group_range[[1]], -c("group", "cage.pen"))
+
+
+long_real_range$Name <- ""
+long_real_range$Name[long_real_range$name == "min"] <- "Group minimum"
+long_real_range$Name[long_real_range$name == "mean"] <- "Group mean"
+long_real_range$Name[long_real_range$name == "max"] <- "Group maximum"
+long_real_range$Name <- factor(long_real_range$Name,
+                               levels = c("Group minimum", "Group mean", "Group maximum"))
+
+
+plot_real_range <- qplot(x = value, fill = cage.pen, data = long_real_range) +
+    facet_wrap(~ name, scale = "free")
+
+plot_sim_range <- qplot(x = value, fill = cage.pen, data = long_sim_range) +
+    facet_wrap(~ name, scale = "free")
+    
+
+plot_sim_vs_real <- ggarrange(plot_real_range, plot_sim_range)
+
+
+sim_max <- unlist(lapply(sim_group_range,
+                         function(x) mean(x$max)))
+
+
+plot_group_ranges_bars <- qplot(x = factor(group),
+                                y = mean,
+                                ymin = min,
+                                ymax = max,
+                                data = real_group_range,
+                                colour = cage.pen,
+                                geom = "pointrange") +
+    scale_colour_manual(values = c("grey", "black"), name = "") +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    xlab("Group") +
+    ylab("Range and mean of residual comb mass")
+
+
+plot_max_min_histograms <- qplot(x = value, fill = cage.pen,
+                                 data = filter(long_real_range,
+                                               name %in% c("max", "mean", "min"))) +
+    facet_wrap(~ Name) +
+    scale_fill_manual(values = c("grey", "black"), name = "") +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank()) +
+    xlab("Residual comb mass (g)") +
+    ylab("Number of groups in bin")
+
+
+plot_ranges_combined <- ggarrange(plot_group_ranges_bars,
+                                  plot_max_min_histograms,
+                                  heights = c(0.6, 0.4))
