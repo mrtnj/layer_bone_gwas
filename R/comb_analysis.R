@@ -344,30 +344,79 @@ dev.off()
 suggestive_hit <- filter(gwas_pen, p_wald < 1e-5)
 
 
-plot_hit_pen <- qplot(x = ps/1e6, y = -log10(p_wald),
-                      data = filter(gwas_pen,
-                                    chr == 6 &
-                                    ps > suggestive_hit$ps - 2e6 &
-                                    ps < suggestive_hit$ps + 2e6)) +
-    formatting_manhattan +
+region_pen <- filter(gwas_pen,
+                     chr == 6 &
+                     ps > suggestive_hit$ps - 2e6 &
+                     ps < suggestive_hit$ps + 2e6)
+
+region_cage <- filter(gwas_cage,
+                      chr == 6 &
+                      ps > suggestive_hit$ps - 2e6 &
+                      ps < suggestive_hit$ps + 2e6)
+
+region_all <- filter(gwas_all,
+                     chr == 6 &
+                     ps > suggestive_hit$ps - 2e6 &
+                     ps < suggestive_hit$ps + 2e6)
+
+
+## LD
+
+geno <- readRDS("outputs/geno.Rds")
+
+get_ld <- function(geno, region) {
+
+    geno <- geno[,colnames(geno) %in% region$rs]
+    
+    focal_geno <- as.genotype(as.data.frame(geno)[, suggestive_hit$rs])
+    
+    r2 <- numeric(ncol(geno))
+    
+    for(col_ix in 1:ncol(geno)) {
+        r2[col_ix] <- LD(focal_geno,
+                         as.genotype(as.data.frame(geno)[, col_ix]))$"R^2"
+    }
+    names(r2) <- colnames(geno)
+
+    r2
+}
+
+region_pen$ld <- get_ld(geno[geno$individual >= 1000,],
+                        region_pen)
+
+region_cage$ld <- get_ld(geno[geno$individual < 1000,],
+                        region_cage)
+
+region_all$ld <- get_ld(geno,
+                        region_all)
+
+
+
+## Combined plot
+
+formatting_hits <- list(theme_bw(),
+                        theme(panel.grid = element_blank(),
+                              legend.position = "none"),
+                        scale_colour_gradient(low = "blue", high = "red", name = "LD"),
+                        geom_hline(yintercept = 5, colour = "blue", linetype = 2),
+                        ylab(""),
+                        xlab(""),
+                        ylim(0, 8))
+
+plot_hit_pen <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
+                      data = region_pen) +
+    formatting_hits + theme(legend.position = "right") +
     ggtitle("Chromosome 6 locus (PEN)")
 
-plot_hit_cage <- qplot(x = ps/1e6, y = -log10(p_wald),
-                      data = filter(gwas_cage,
-                                    chr == 6 &
-                                    ps > suggestive_hit$ps - 2e6 &
-                                    ps < suggestive_hit$ps + 2e6)) +
-    formatting_manhattan +
+plot_hit_cage <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
+                      data = region_cage) +
+    formatting_hits + 
     ggtitle("Chromosome 6 locus (CAGE)")
 
-plot_hit_all <- qplot(x = ps/1e6, y = -log10(p_wald),
-                      data = filter(gwas_all,
-                                    chr == 6 &
-                                    ps > suggestive_hit$ps - 2e6 &
-                                    ps < suggestive_hit$ps + 2e6)) +
-    formatting_manhattan +
+plot_hit_all <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
+                      data = region_all) +
+    formatting_hits +
     ggtitle("Chromosome 6 locus (JOINT)")
-
 
 plot_hit_combined <- ggarrange(plot_hit_cage,
                                plot_hit_pen,
