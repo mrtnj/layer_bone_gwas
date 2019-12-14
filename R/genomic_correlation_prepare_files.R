@@ -54,7 +54,7 @@ pheno <- readRDS("outputs/pheno.Rds")
 all_covar <- filter(pheno,
                     animal_id %in% all_load$X1 &
                     !is.na(load_N))[, c("animal_id", "group", "weight",
-                                        "breed", "cage.pen", "load_N")]
+                                        "breed", "cage.pen", "load_N", "comb_g")]
 
 all_covar <- all_covar[order(all_covar$animal_id),]
 
@@ -72,10 +72,27 @@ all_covar$cage_load <- ifelse(all_covar$cage.pen == "CAGE",
                               NA)
 
 
+all_covar$pen_comb <- ifelse(all_covar$cage.pen == "PEN",
+                             all_covar$comb_g,
+                             NA)
+
+all_covar$cage_comb <- ifelse(all_covar$cage.pen == "CAGE",
+                              all_covar$comb_g,
+                              NA)
+
+
+
 
 write.table(all_covar[, c("animal_id", "animal_id",
                           "cage_load", "pen_load")],
             file = "genomic_correlation/pheno.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+write.table(all_covar[, c("animal_id", "animal_id",
+                          "cage_comb", "pen_comb")],
+            file = "genomic_correlation/pheno_comb.txt",
             quote = FALSE,
             col.names = FALSE,
             row.names = FALSE)
