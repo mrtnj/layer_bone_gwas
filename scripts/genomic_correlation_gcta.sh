@@ -20,9 +20,24 @@ $GCTA_PATH/gcta64 --bfile genomic_correlation/all \
 		  --out genomic_correlation/gcta \
 		  --autosome-num 28 --autosome
 
+$GCTA_PATH/gcta64 --reml \
+		  --grm-bin genomic_correlation/gcta \
+		  --pheno genomic_correlation/pheno.txt \
+		  --qcovar genomic_correlation/qc.txt \
+		  --covar genomic_correlation/cc.txt \
+		  --out genomic_correlation/gcta_cage
+
+$GCTA_PATH/gcta64 --reml \
+		  --grm-bin genomic_correlation/gcta \
+		  --pheno genomic_correlation/pheno.txt \
+		  --mpheno 2 \
+		  --qcovar genomic_correlation/qc.txt \
+		  --covar genomic_correlation/cc.txt \
+		  --out genomic_correlation/gcta_pen
 
 $GCTA_PATH/gcta64 --reml-bivar \
 		  --grm-bin genomic_correlation/gcta \
 		  --pheno genomic_correlation/pheno.txt \
 		  --qcovar genomic_correlation/qc.txt \
+		  --covar genomic_correlation/cc.txt \
 		  --out genomic_correlation/gcta_bivar
