@@ -260,12 +260,20 @@ plot_ranges_combined <- ggarrange(plot_group_ranges_bars,
                                   heights = c(0.6, 0.4))
 
 
+pdf("figures/comb_group_ranges.pdf")
+print(plot_ranges_combined)
+dev.off()
+
+
+
 ## GWAS
 
 gwas_pen <- read_tsv("gwas/pen_comb_adj/output/pen_comb_adj.assoc.txt",
                      col_types = "ccnnccnnnnnnnnn")
 gwas_cage <- read_tsv("gwas/cage_comb_adj/output/cage_comb_adj.assoc.txt",
                       col_types = "ccnnccnnnnnnnnn")
+gwas_all <- read_tsv("gwas/all_comb_adj/output/all_comb_adj.assoc.txt",
+                     col_types = "ccnnccnnnnnnnnn")
 
 
 
@@ -277,6 +285,7 @@ chr_lengths <- chr_lengths[match(preferred_order, chr_lengths$chr),]
 
 gwas_pen$global_pos <- flatten_coordinates(gwas_pen$chr, gwas_pen$ps, chr_lengths)
 gwas_cage$global_pos <- flatten_coordinates(gwas_cage$chr, gwas_cage$ps, chr_lengths)
+gwas_all$global_pos <- flatten_coordinates(gwas_all$chr, gwas_all$ps, chr_lengths)
 
 chr_breaks <- summarise(group_by(gwas_pen, chr),
                         global_pos_break = min(global_pos))
@@ -286,3 +295,88 @@ chr_breaks$chr_masked <- chr_breaks$chr
 chr_breaks$chr_masked[11:33] <- ""
 
 
+formatting_manhattan <- list(theme_bw(),
+                             theme(panel.grid = element_blank(),
+                                   legend.position = "none"),
+                             scale_colour_manual(values = c("black", "grey")),
+                             geom_hline(yintercept = 5, colour = "blue", linetype = 2),
+                             ylab(""),
+                             xlab(""),
+                             ylim(0, 8))
+
+plot_manhattan_pen <- plot_manhattan(gwas_pen) +
+    formatting_manhattan +
+    ggtitle("Comb mass (PEN)")
+plot_manhattan_cage <- plot_manhattan(gwas_cage) +
+    formatting_manhattan +
+    ggtitle("Comb mass (CAGE)")
+plot_manhattan_all <- plot_manhattan(gwas_all) +
+    formatting_manhattan +
+    ggtitle("Comb mass (JOINT)")
+
+plot_manhattan_combined <- ggarrange(plot_manhattan_cage,
+                                     plot_manhattan_pen,
+                                     plot_manhattan_all,
+                                     left = "Negative logarithm of p-value",
+                                     bottom = "Chromosome")
+
+pdf("figures/comb_manhattan.pdf")
+print(plot_manhattan_combined)
+dev.off()
+
+
+plot_qq_pen <- plot_qq(gwas_pen$p_wald) +
+    ggtitle("Comb mass (PEN)")
+plot_qq_cage <- plot_qq(gwas_cage$p_wald) +
+    ggtitle("Comb mass (CAGE)")
+plot_qq_all <- plot_qq(gwas_all$p_wald) +
+    ggtitle("Comb mass (JOINT)")
+
+plot_qq_combined <- ggarrange(plot_qq_cage,
+                              plot_qq_pen,
+                              plot_qq_all)
+
+pdf("figures/comb_qq.pdf")
+print(plot_qq_combined)
+dev.off()
+
+
+suggestive_hit <- filter(gwas_pen, p_wald < 1e-5)
+
+
+plot_hit_pen <- qplot(x = ps/1e6, y = -log10(p_wald),
+                      data = filter(gwas_pen,
+                                    chr == 6 &
+                                    ps > suggestive_hit$ps - 2e6 &
+                                    ps < suggestive_hit$ps + 2e6)) +
+    formatting_manhattan +
+    ggtitle("Chromosome 6 locus (PEN)")
+
+plot_hit_cage <- qplot(x = ps/1e6, y = -log10(p_wald),
+                      data = filter(gwas_cage,
+                                    chr == 6 &
+                                    ps > suggestive_hit$ps - 2e6 &
+                                    ps < suggestive_hit$ps + 2e6)) +
+    formatting_manhattan +
+    ggtitle("Chromosome 6 locus (CAGE)")
+
+plot_hit_all <- qplot(x = ps/1e6, y = -log10(p_wald),
+                      data = filter(gwas_all,
+                                    chr == 6 &
+                                    ps > suggestive_hit$ps - 2e6 &
+                                    ps < suggestive_hit$ps + 2e6)) +
+    formatting_manhattan +
+    ggtitle("Chromosome 6 locus (JOINT)")
+
+
+plot_hit_combined <- ggarrange(plot_hit_cage,
+                               plot_hit_pen,
+                               plot_hit_all,
+                               left = "Negative logarithm of p-value",
+                               bottom = "Position (Mbp)")
+
+
+
+pdf("figures/comb_chr6_locus.pdf")
+print(plot_hit_combined)
+dev.off()
