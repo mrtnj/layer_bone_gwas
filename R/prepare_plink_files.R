@@ -110,6 +110,10 @@ geno_pruned <- filter(geno, !(individual %in% c(ids_high_missingness,
                                                 ids_strange_breed)))
 
 
+saveRDS(geno_pruned,
+        file = "outputs/geno.Rds")
+
+
 ## Format genotypes for converting to plink compound ped
 
 geno_compound <- as.data.frame(geno_pruned)
