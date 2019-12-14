@@ -4,6 +4,7 @@
 library(broom)
 library(dplyr)
 library(egg)
+library(genetics)
 library(ggplot2)
 library(readr)
 library(tidyr)
