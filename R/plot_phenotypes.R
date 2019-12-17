@@ -3,6 +3,7 @@
 
 library(broom)
 library(dplyr)
+library(egg)
 library(ggplot2)
 library(lme4)
 library(tidyr)
@@ -224,3 +225,67 @@ plot_scatter_combined <- ggarrange(plot_scatter_nocomb, plot_scatter_ests, heigh
 pdf("figures/plot_bw_regression.pdf")
 print(plot_scatter_combined)
 dev.off()
+
+
+
+## pQCT phenotypes
+
+ct_ix <- grep("^ct_", colnames(pheno))
+
+ct_cor <- cor(pheno[, ct_ix], use = "p")
+
+
+ct_animals <- na.exclude(pheno[, c(1, ct_ix)])$animal_id
+
+ct_pheno <- filter(pheno, animal_id %in% ct_animals)
+
+ct_pca <- prcomp(ct_pheno[, ct_ix], scale = TRUE)
+
+ct_pca_data <- cbind(ct_pheno, ct_pca$x)
+
+long_ct_pca <- pivot_longer(ct_pca_data, PC1:PC9)
+
+plot_ct_pcs <- qplot(x = name,
+                     y = value,
+                     colour = cage.pen,
+                     data = long_ct_pca,
+                     geom = "boxplot")
+
+plot_ct_load <- qplot(x = load_N,
+                      y = value,
+                      colour = cage.pen,
+                      data = long_ct_pca) +
+    facet_wrap(~ name) +
+    geom_smooth(method = lm)
+
+
+## FTIR phenotypes
+
+ft_ix <- grep("^ftir_", colnames(pheno))
+
+ft_cor <- cor(pheno[, ft_ix], use = "p")
+
+
+ft_animals <- na.exclude(pheno[, c(1, ft_ix)])$animal_id
+
+ft_pheno <- filter(pheno, animal_id %in% ft_animals)
+
+ft_pca <- prcomp(ft_pheno[, ft_ix], scale = TRUE)
+
+ft_pca_data <- cbind(ft_pheno, ft_pca$x)
+
+long_ft_pca <- pivot_longer(ft_pca_data, PC1:PC9)
+
+plot_ft_pcs <- qplot(x = name,
+                     y = value,
+                     colour = cage.pen,
+                     data = long_ft_pca,
+                     geom = "boxplot")
+
+plot_ft_load <- qplot(x = load_N,
+                      y = value,
+                      colour = cage.pen,
+                      data = long_ft_pca) +
+    facet_wrap(~ name,
+               scale = "free") +
+    geom_smooth(method = lm)
