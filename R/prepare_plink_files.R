@@ -40,7 +40,42 @@ weight <- read_data("mdb_dump/weights.txt")
 comb <- read_data("mdb_dump/combs.txt")
 
 
-pheno <- Reduce(full_join, list(breaking, covariates, weight, comb))
+## FTIR data
+
+ftir_medullary <- read_data("mdb_dump/ftir_medullary.txt")
+ftir_cortical <- read_data("mdb_dump/ftir_cortical.txt")
+
+colnames(ftir_cortical)[2] <- "thickness_mm"
+
+colnames(ftir_medullary)[2:11] <- paste("ftir_medullary_",
+                                        colnames(ftir_medullary)[2:11],
+                                        sep = "")
+
+colnames(ftir_cortical)[2:14] <- paste("ftir_cortical_",
+                                       colnames(ftir_cortical)[2:14],
+                                       sep = "")
+
+## pQCT data
+
+ct_distal <- read_data("mdb_dump/micro_distal_avg.txt")
+
+colnames(ct_distal)[5:58] <- paste("ct_distal_",
+                                   colnames(ct_distal)[5:58],
+                                   sep = "")
+
+ct_mid <- read_data("mdb_dump/micro_midshaft_avg.txt")
+
+colnames(ct_mid)[5:58] <- paste("ct_mid_",
+                                colnames(ct_mid)[5:58],
+                                sep = "")
+
+
+
+pheno <- Reduce(full_join, list(breaking, covariates, weight, comb,
+                                ftir_medullary,
+                                ftir_cortical,
+                                ct_distal[, -(2:4)],
+                                ct_mid[, -(2:4)]))
 
 saveRDS(pheno,
         file = "outputs/pheno.Rds")
