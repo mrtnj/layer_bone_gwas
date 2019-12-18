@@ -52,8 +52,6 @@ Z_pen_conspecific <- matrix(0,
 
 colnames(Z_pen_conspecific) <- rownames(Z_pen_conspecific) <- pen_covar$animal_id
 
-Z_grm_conspecific <- Z_pen_conspecific %*% L
-
 for (ind_ix in 1:nrow(pen_covar)) {
 
     group_members <- pen_covar$animal_id[pen_covar$group == pen_covar$group[ind_ix]]
@@ -63,17 +61,26 @@ for (ind_ix in 1:nrow(pen_covar)) {
     Z_pen_conspecific[which(colnames(Z_pen_conspecific) %in% conspecifics), ind_ix] <- 1
 }
 
+Z_grm_conspecific <- Z_pen_conspecific %*% L
+
 
 ## Model
 
 model <- hglm(y = pen_comb$X6,
               X = model.matrix(~ 1 + weight, pen_covar),
-              Z = cbind(Z_grm_pen, Z_pen_group, Z_pen_conspecific),
-              RandC = c(ncol(Z_grm_pen), ncol(Z_pen_group), ncol(Z_grm_conspecific)))
+              Z = cbind(Z_grm_pen, Z_pen_group, Z_grm_conspecific),
+              RandC = c(ncol(Z_grm_pen), ncol(Z_pen_group), ncol(Z_grm_conspecific)),
+              conv = 1e-8)
 
 
 h2 <- model$varRanef[1] / (model$varFix + sum(model$varRanef))
 ratio_group <- model$varRanef[2] / (model$varFix + sum(model$varRanef))
 ratio_conspecifics <- model$varRanef[3] / (model$varFix + sum(model$varRanef))
 
+
+
+model2 <- hglm(y = pen_comb$X6,
+               X = model.matrix(~ 1 + weight, pen_covar),
+               Z = cbind(Z_grm_pen, Z_grm_conspecific),
+               RandC = c(ncol(Z_grm_pen), ncol(Z_grm_conspecific)))
 
