@@ -81,7 +81,8 @@ model_slope_interaction <- lm(comb_g ~ weight * cage.pen, pheno)
 
 plot_scatter_slope <- ggarrange(plot_scatter,
                                 plot_slope,
-                                heights = c(0.75, 0.25))
+                                heights = c(0.75, 0.25),
+                                labels = c("A", "B"))
 
 
 pdf("figures/comb_scatterplot.pdf")
@@ -113,8 +114,8 @@ coef_residual <- tidy(model_residual,
                       conf.int = TRUE)
 
 coef_residual$Term <- ""
-coef_residual$Term[coef_residual$term == "breedLSL"] <- "Bovans vs LSL"
-coef_residual$Term[coef_residual$term == "cage.penPEN"] <- "CAGE vs PEN"
+coef_residual$Term[coef_residual$term == "breedLSL"] <- "LSL vs Bovans"
+coef_residual$Term[coef_residual$term == "cage.penPEN"] <- "PEN vs CAGE"
 coef_residual$Term[coef_residual$term == "breedLSL:cage.penPEN"] <- "Interaction"
 
 
@@ -146,7 +147,7 @@ plot_ests <- ggplot() +
     scale_colour_manual(values = c("blue", "red"),
                         name = "") +
     scale_y_continuous(breaks = seq(from = -6, to = 3, by = 1)) +
-    scale_x_discrete(limits = c("Interaction", "Bovans vs LSL", "CAGE vs PEN")) +
+    scale_x_discrete(limits = c("Interaction", "LSL vs Bovans", "PEN vs CAGE")) +
     geom_hline(yintercept = 0, colour = "red", linetype = 2) +
     coord_flip() +
     theme_bw() +
@@ -159,7 +160,8 @@ plot_ests <- ggplot() +
 
 plot_dots_ests <- ggarrange(plot_dots,
                             plot_ests,
-                            heights = c(0.75, 0.25))
+                            heights = c(0.75, 0.25),
+                            labels = c("A", "B"))
 
 
 pdf("figures/comb_dotplot.pdf")
