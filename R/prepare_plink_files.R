@@ -71,7 +71,8 @@ colnames(ct_mid)[5:58] <- paste("ct_mid_",
 
 ## TGA data
 
-tga <- read_tsv("mdb_dump/tga.txt")
+tga <- read_tsv("mdb_dump/tga.txt",
+                na = c("", "--"))
 colnames(tga) <- sub(colnames(tga), pattern = "/", replacement = "_over_")
 
 
