@@ -69,13 +69,18 @@ colnames(ct_mid)[5:58] <- paste("ct_mid_",
                                 colnames(ct_mid)[5:58],
                                 sep = "")
 
+## TGA data
+
+tga <- read_tsv("mdb_dump/tga.txt")
+colnames(tga) <- sub(colnames(tga), pattern = "/", replacement = "_over_")
 
 
 pheno <- Reduce(full_join, list(breaking, covariates, weight, comb,
                                 ftir_medullary,
                                 ftir_cortical,
                                 ct_distal[, -(2:4)],
-                                ct_mid[, -(2:4)]))
+                                ct_mid[, -(2:4)],
+                                tga))
 
 saveRDS(pheno,
         file = "outputs/pheno.Rds")
