@@ -230,7 +230,14 @@ dev.off()
 
 ## pQCT phenotypes
 
-ct_ix <- grep("^ct_", colnames(pheno))
+ct_trait_names <- c("TOT_CNT", "TOT_DEN",
+                    "TRAB_CNT", "TRAB_DEN",
+                    "CRT_CNT", "CRT_DEN",
+                    "CRT_THK_C", "OBJECTLEN")
+
+ct_ix <- which(colnames(pheno) %in%
+               c(paste("ct_mid_", ct_trait_names, sep = ""),
+                 paste("ct_distal_", ct_trait_names, sep = "")))
 
 ct_cor <- cor(pheno[, ct_ix], use = "p")
 
@@ -286,6 +293,39 @@ plot_ft_load <- qplot(x = load_N,
                       y = value,
                       colour = cage.pen,
                       data = long_ft_pca) +
+    facet_wrap(~ name,
+               scale = "free") +
+    geom_smooth(method = lm)
+
+
+
+## TGA phenotypes
+
+tga_ix <- grep("MB$|CB$", colnames(pheno))
+
+tga_cor <- cor(pheno[, tga_ix], use = "p")
+
+
+tga_animals <- na.exclude(pheno[, c(1, tga_ix)])$animal_id
+
+tga_pheno <- filter(pheno, animal_id %in% tga_animals)
+
+tga_pca <- prcomp(tga_pheno[, tga_ix], scale = TRUE)
+
+tga_pca_data <- cbind(tga_pheno, tga_pca$x)
+
+long_tga_pca <- pivot_longer(tga_pca_data, PC1:PC9)
+
+plot_tga_pcs <- qplot(x = name,
+                      y = value,
+                      colour = cage.pen,
+                      data = long_tga_pca,
+                      geom = "boxplot")
+
+plot_tga_load <- qplot(x = load_N,
+                       y = value,
+                       colour = cage.pen,
+                       data = long_tga_pca) +
     facet_wrap(~ name,
                scale = "free") +
     geom_smooth(method = lm)
