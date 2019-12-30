@@ -69,6 +69,35 @@ colnames(ct_mid)[5:58] <- paste("ct_mid_",
                                 colnames(ct_mid)[5:58],
                                 sep = "")
 
+ct <- inner_join(ct_distal[, -(2:4)],
+                 ct_mid[, -(2:4)])
+
+
+## pQCT principal components
+
+ct_trait_names <- c("TOT_CNT", "TOT_DEN",
+                    "TRAB_CNT", "TRAB_DEN",
+                    "CRT_CNT", "CRT_DEN",
+                    "CRT_THK_C", "OBJECTLEN")
+
+ct_ix <- which(colnames(ct) %in%
+               c(paste("ct_mid_", ct_trait_names, sep = ""),
+                 paste("ct_distal_", ct_trait_names, sep = "")))
+
+
+ct_animals <- na.exclude(ct[, c(1, ct_ix)])$animal_id
+
+ct_complete <- filter(ct, animal_id %in% ct_animals)
+
+ct_pca <- prcomp(ct_complete[, ct_ix], scale = TRUE)
+
+ct_pca_data <- data.frame(animal_id = ct_complete$animal_id,
+                          ct_pc1 = ct_pca$x[, 1],
+                          ct_pc2 = ct_pca$x[, 2],
+                          ct_pc3 = ct_pca$x[, 3])
+
+
+
 ## TGA data
 
 tga <- read_tsv("mdb_dump/tga.txt",
@@ -79,8 +108,8 @@ colnames(tga) <- sub(colnames(tga), pattern = "/", replacement = "_over_")
 pheno <- Reduce(full_join, list(breaking, covariates, weight, comb,
                                 ftir_medullary,
                                 ftir_cortical,
-                                ct_distal[, -(2:4)],
-                                ct_mid[, -(2:4)],
+                                ct,
+                                ct_pca_data,
                                 tga))
 
 saveRDS(pheno,
@@ -241,13 +270,25 @@ fam_all_load <- fam(all_genotyped, "load_N")
 fam_all_weight <- fam(all_genotyped, "weight")
 fam_all_comb <- fam(all_genotyped, "comb_g")
 
+fam_all_ct1 <- fam(all_genotyped, "ct_pc1")
+fam_all_ct2 <- fam(all_genotyped, "ct_pc2")
+fam_all_ct3 <- fam(all_genotyped, "ct_pc3")
+
 fam_pen_load <- fam(pen_genotyped, "load_N")
 fam_pen_weight <- fam(pen_genotyped, "weight")
 fam_pen_comb <- fam(pen_genotyped, "comb_g")
 
+fam_pen_ct1 <- fam(pen_genotyped, "ct_pc1")
+fam_pen_ct2 <- fam(pen_genotyped, "ct_pc2")
+fam_pen_ct3 <- fam(pen_genotyped, "ct_pc3")
+
 fam_cage_load <- fam(cage_genotyped, "load_N")
 fam_cage_weight <- fam(cage_genotyped, "weight")
 fam_cage_comb <- fam(cage_genotyped, "comb_g")
+
+fam_cage_ct1 <- fam(cage_genotyped, "ct_pc1")
+fam_cage_ct2 <- fam(cage_genotyped, "ct_pc2")
+fam_cage_ct3 <- fam(cage_genotyped, "ct_pc3")
 
 fam_bovans_pen_load <- fam(bovans_pen_genotyped, "load_N")
 fam_bovans_pen_weight <- fam(bovans_pen_genotyped, "weight")
@@ -356,6 +397,18 @@ write_plink(fam_pen_weight, "gwas/fam_pen_weight.fam")
 write_plink(fam_cage_weight, "gwas/fam_cage_weight.fam")
 write_plink(fam_pen_comb, "gwas/fam_pen_comb.fam")
 write_plink(fam_cage_comb, "gwas/fam_cage_comb.fam")
+
+write_plink(fam_all_ct1, "gwas/fam_all_ct1.fam")
+write_plink(fam_all_ct2, "gwas/fam_all_ct2.fam")
+write_plink(fam_all_ct3, "gwas/fam_all_ct3.fam")
+
+write_plink(fam_pen_ct1, "gwas/fam_pen_ct1.fam")
+write_plink(fam_pen_ct2, "gwas/fam_pen_ct2.fam")
+write_plink(fam_pen_ct3, "gwas/fam_pen_ct3.fam")
+
+write_plink(fam_cage_ct1, "gwas/fam_cage_ct1.fam")
+write_plink(fam_cage_ct2, "gwas/fam_cage_ct2.fam")
+write_plink(fam_cage_ct3, "gwas/fam_cage_ct3.fam")
 
 write_plink(fam_bovans_pen_load, "gwas/fam_bovans_pen_load.fam")
 write_plink(fam_bovans_pen_weight, "gwas/fam_bovans_pen_weight.fam")
