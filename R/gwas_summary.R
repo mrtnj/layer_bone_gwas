@@ -10,6 +10,7 @@ library(stringr)
 library(tidyr)
 
 
+source("R/gwas_helper_functions.R")
 
 
 ## Collate results
