@@ -68,6 +68,21 @@ run_gwas all_comb_adj \
 	 fam_all_comb.fam \
 	 covar_all_cagepen_breed_weight.txt
 
+run_gwas all_ct1 \
+	 all \
+	 fam_all_ct1.fam \
+	 covar_all_cagepen_breed_weight.txt
+
+run_gwas all_ct2 \
+	 all \
+	 fam_all_ct2.fam \
+	 covar_all_cagepen_breed_weight.txt
+
+run_gwas all_ct3 \
+	 all \
+	 fam_all_ct3.fam \
+	 covar_all_cagepen_breed_weight.txt
+
 
 
 run_gwas pen_load_adj \
@@ -95,6 +110,22 @@ run_gwas pen_load_weight \
 	 fam_pen_load.fam \
 	 covar_pen_weight.txt
 
+run_gwas pen_ct1 \
+	 pen \
+	 fam_pen_ct1.fam \
+	 covar_pen_breed_weight.txt
+
+run_gwas pen_ct2 \
+	 pen \
+	 fam_pen_ct2.fam \
+	 covar_pen_breed_weight.txt
+
+run_gwas pen_ct3 \
+	 pen \
+	 fam_pen_ct3.fam \
+	 covar_pen_breed_weight.txt
+
+
 
 run_gwas cage_load_adj \
 	 cage \
@@ -120,6 +151,22 @@ run_gwas cage_load_weight \
 	 cage \
 	 fam_cage_load.fam \
 	 covar_cage_weight.txt
+
+run_gwas cage_ct1 \
+	 cage \
+	 fam_cage_ct1.fam \
+	 covar_cage_breed_weight.txt
+
+run_gwas cage_ct2 \
+	 cage \
+	 fam_cage_ct2.fam \
+	 covar_cage_breed_weight.txt
+
+run_gwas cage_ct3 \
+	 cage \
+	 fam_cage_ct3.fam \
+	 covar_cage_breed_weight.txt
+
 
 
 ## Breed-separated
