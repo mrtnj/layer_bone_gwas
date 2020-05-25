@@ -26,14 +26,14 @@ function run_gwas () {
 	ln -s ../$PLINK_BASE.map $NAME.map
 	ln -s ../$TRAIT_FILE $NAME.fam
 	if [ COVAR_FILE != "NULL" ]; then
-	    ln -s ../$COVAR_FILE covar_$NAME.txt
+	    ln -s ../$COVAR_FILE covariates.txt
 	fi
     fi
 
     if [ $COVAR_FILE != "NULL" ]; then
 	$GEMMA_PATH/gemma -bfile $NAME \
 			  -k ../output/${PLINK_BASE}_grm.sXX.txt \
-			  -c covar_$NAME.txt \
+			  -c covariates.txt \
 			  -lmm 4 \
 			  -o $NAME
     fi
@@ -59,8 +59,8 @@ for TRAIT in load_N comb_g ct_pc1 ct_pc2 ct_pc3 \
             
                  run_gwas ${GROUP}_${TRAIT} \
                           ${GROUP} \
-	                      fam_all_${TRAIT}.fam \
-	                      covar_${GROUP}_cagepen_breed_weight.txt
+	                      fam_${GROUP}_${TRAIT}.fam \
+	                      covar_${GROUP}_breed_weight.txt
 	                     
              done
             
@@ -71,7 +71,7 @@ for GROUP in all pen cage; do
     run_gwas ${GROUP}_weight \
 	          ${GROUP} \
 	          fam_${GROUP}_weight.fam \
-	          covar_${GROUP}_cagepen_breed.txt
+	          covar_${GROUP}_breed.txt
 	          
 done
 
