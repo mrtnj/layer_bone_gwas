@@ -145,6 +145,19 @@ assert_that(identical(lsl_cage_genotyped$animal_id,
                       geno_lsl_cage$individual))
 
 
+## Traits of interest
+
+traits <- c("load_N", "weight", "comb_g",
+            "ct_pc1", "ct_pc2", "ct_pc3",
+            "WaterLost_CB", "OMLost_CB", "CO2Lost_CB",
+            "Phosphates_CB", "Mineral_CB",
+            "Phosphates_over_OM_CB", "CO3_over_Phosphates_CB",
+            "WaterLost_MB", "OMLost_MB",
+            "CO2Lost_MB", "Phosphates_MB",
+            "Mineral_MB", "Phosphates_over_OM_MB",
+            "CO3_over_Phosphates_MB")
+
+
 ## Create fam files
 
 fam <- function(df, trait) data.frame(fid = df$animal_id,
@@ -154,29 +167,30 @@ fam <- function(df, trait) data.frame(fid = df$animal_id,
                                       sex = 2,
                                       as.data.frame(df[, trait]))
 
-fam_all_load <- fam(all_genotyped, "load_N")
-fam_all_weight <- fam(all_genotyped, "weight")
-fam_all_comb <- fam(all_genotyped, "comb_g")
+write_plink <- function(x, filename) write.table(x,
+                                                 file = filename,
+                                                 quote = FALSE,
+                                                 row.names = FALSE,
+                                                 col.names = FALSE)
 
-fam_all_ct1 <- fam(all_genotyped, "ct_pc1")
-fam_all_ct2 <- fam(all_genotyped, "ct_pc2")
-fam_all_ct3 <- fam(all_genotyped, "ct_pc3")
 
-fam_pen_load <- fam(pen_genotyped, "load_N")
-fam_pen_weight <- fam(pen_genotyped, "weight")
-fam_pen_comb <- fam(pen_genotyped, "comb_g")
+for (trait_ix in 1:length(traits)) {
+ 
+    fam_all <- fam(all_genotyped, traits[trait_ix])
+    write_plink(fam_all,
+                paste("gwas/fam_all_", traits[trait_ix], ".fam", sep = ""))
+    
+    fam_pen <- fam(pen_genotyped, traits[trait_ix])
+    write_plink(fam_pen,
+                paste("gwas/fam_pen_", traits[trait_ix], ".fam", sep = ""))
+    
+    fam_cage <- fam(cage_genotyped, traits[trait_ix])
+    write_plink(fam_cage,
+                paste("gwas/fam_cage_", traits[trait_ix], ".fam", sep = ""))
+    
+}
 
-fam_pen_ct1 <- fam(pen_genotyped, "ct_pc1")
-fam_pen_ct2 <- fam(pen_genotyped, "ct_pc2")
-fam_pen_ct3 <- fam(pen_genotyped, "ct_pc3")
-
-fam_cage_load <- fam(cage_genotyped, "load_N")
-fam_cage_weight <- fam(cage_genotyped, "weight")
-fam_cage_comb <- fam(cage_genotyped, "comb_g")
-
-fam_cage_ct1 <- fam(cage_genotyped, "ct_pc1")
-fam_cage_ct2 <- fam(cage_genotyped, "ct_pc2")
-fam_cage_ct3 <- fam(cage_genotyped, "ct_pc3")
+## Breed-separated
 
 fam_bovans_pen_load <- fam(bovans_pen_genotyped, "load_N")
 fam_bovans_pen_weight <- fam(bovans_pen_genotyped, "weight")
@@ -193,6 +207,22 @@ fam_bovans_cage_comb <- fam(bovans_cage_genotyped, "comb_g")
 fam_lsl_cage_load <- fam(lsl_cage_genotyped, "load_N")
 fam_lsl_cage_weight <- fam(lsl_cage_genotyped, "weight")
 fam_lsl_cage_comb <- fam(lsl_cage_genotyped, "comb_g")
+
+write_plink(fam_bovans_pen_load, "gwas/fam_bovans_pen_load.fam")
+write_plink(fam_bovans_pen_weight, "gwas/fam_bovans_pen_weight.fam")
+write_plink(fam_bovans_pen_comb, "gwas/fam_bovans_pen_comb.fam")
+
+write_plink(fam_lsl_pen_load, "gwas/fam_lsl_pen_load.fam")
+write_plink(fam_lsl_pen_weight, "gwas/fam_lsl_pen_weight.fam")
+write_plink(fam_lsl_pen_comb, "gwas/fam_lsl_pen_comb.fam")
+
+write_plink(fam_bovans_cage_load, "gwas/fam_bovans_cage_load.fam")
+write_plink(fam_bovans_cage_weight, "gwas/fam_bovans_cage_weight.fam")
+write_plink(fam_bovans_cage_comb, "gwas/fam_bovans_cage_comb.fam")
+
+write_plink(fam_lsl_cage_load, "gwas/fam_lsl_cage_load.fam")
+write_plink(fam_lsl_cage_weight, "gwas/fam_lsl_cage_weight.fam")
+write_plink(fam_lsl_cage_comb, "gwas/fam_lsl_cage_comb.fam")
 
 
 
@@ -261,59 +291,12 @@ covar_lsl_cage_weight <- model.matrix(~ weight,
 
 ## Write out everything
 
-write_plink <- function(x, filename) write.table(x,
-                                                 file = filename,
-                                                 quote = FALSE,
-                                                 row.names = FALSE,
-                                                 col.names = FALSE)
-
 write_ped <- function(x, filename) write.table(x,
                                                file = filename,
                                                quote = FALSE,
                                                row.names = FALSE,
                                                col.names = FALSE,
                                                na = "0 0")
-## Fam
-
-write_plink(fam_all_load, "gwas/fam_all_load.fam")
-write_plink(fam_all_comb, "gwas/fam_all_comb.fam")
-write_plink(fam_all_weight, "gwas/fam_all_weight.fam")
-
-write_plink(fam_pen_load, "gwas/fam_pen_load.fam")
-write_plink(fam_cage_load, "gwas/fam_cage_load.fam")
-write_plink(fam_pen_weight, "gwas/fam_pen_weight.fam")
-write_plink(fam_cage_weight, "gwas/fam_cage_weight.fam")
-write_plink(fam_pen_comb, "gwas/fam_pen_comb.fam")
-write_plink(fam_cage_comb, "gwas/fam_cage_comb.fam")
-
-write_plink(fam_all_ct1, "gwas/fam_all_ct1.fam")
-write_plink(fam_all_ct2, "gwas/fam_all_ct2.fam")
-write_plink(fam_all_ct3, "gwas/fam_all_ct3.fam")
-
-write_plink(fam_pen_ct1, "gwas/fam_pen_ct1.fam")
-write_plink(fam_pen_ct2, "gwas/fam_pen_ct2.fam")
-write_plink(fam_pen_ct3, "gwas/fam_pen_ct3.fam")
-
-write_plink(fam_cage_ct1, "gwas/fam_cage_ct1.fam")
-write_plink(fam_cage_ct2, "gwas/fam_cage_ct2.fam")
-write_plink(fam_cage_ct3, "gwas/fam_cage_ct3.fam")
-
-write_plink(fam_bovans_pen_load, "gwas/fam_bovans_pen_load.fam")
-write_plink(fam_bovans_pen_weight, "gwas/fam_bovans_pen_weight.fam")
-write_plink(fam_bovans_pen_comb, "gwas/fam_bovans_pen_comb.fam")
-
-write_plink(fam_lsl_pen_load, "gwas/fam_lsl_pen_load.fam")
-write_plink(fam_lsl_pen_weight, "gwas/fam_lsl_pen_weight.fam")
-write_plink(fam_lsl_pen_comb, "gwas/fam_lsl_pen_comb.fam")
-
-write_plink(fam_bovans_cage_load, "gwas/fam_bovans_cage_load.fam")
-write_plink(fam_bovans_cage_weight, "gwas/fam_bovans_cage_weight.fam")
-write_plink(fam_bovans_cage_comb, "gwas/fam_bovans_cage_comb.fam")
-
-write_plink(fam_lsl_cage_load, "gwas/fam_lsl_cage_load.fam")
-write_plink(fam_lsl_cage_weight, "gwas/fam_lsl_cage_weight.fam")
-write_plink(fam_lsl_cage_comb, "gwas/fam_lsl_cage_comb.fam")
-
 
 ## Covariates
 
