@@ -7,6 +7,7 @@ library(egg)
 library(ggplot2)
 library(lme4)
 library(tidyr)
+library(patchwork)
 
 
 pheno <- readRDS("outputs/pheno.Rds")
@@ -252,6 +253,29 @@ ct_pca_data <- cbind(ct_pheno, ct_pca$x)
 
 long_ct_pca <- pivot_longer(ct_pca_data, PC1:PC9)
 
+ct_pca_loadings <- data.frame(trait = rownames(ct_pca$rotation),
+                              ct_pca$rotation[,1:3],
+                              stringsAsFactors = FALSE)
+
+ct_pca_loadings_long <- pivot_longer(ct_pca_loadings, -trait,
+                                     names_to = "PC")
+
+plot_ct_loadings <- ggplot() +
+    geom_bar(aes(x = trait, y = value),
+             data = ct_pca_loadings_long,
+             stat = "identity") +
+    scale_x_discrete(limits = pretty_ct_trait_names$name,
+                     labels = pretty_ct_trait_names$pretty_name) +
+    facet_wrap(~ PC, ncol = 1) +
+    coord_flip() +
+    theme_bw() +
+    ylab("") +
+    xlab("") +
+    theme(panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank()) +
+    ggtitle("Principial component loadings")
+
+
 plot_ct_pcs <- qplot(x = name,
                      y = value,
                      colour = cage.pen,
@@ -265,6 +289,67 @@ plot_ct_load <- qplot(x = load_N,
     facet_wrap(~ name) +
     geom_smooth(method = lm)
 
+
+## pQCT heatmap
+
+pretty_ct_trait_names <- read_csv("pretty_trait_names_pqct.csv")
+
+ct_cor_long <- pivot_longer(data.frame(trait1 = rownames(ct_cor),
+                                       ct_cor,
+                                       stringsAsFactors = FALSE),
+                            -trait1,
+                            values_to = "correlation",
+                            names_to = "trait2")
+
+plot_ct_heatmap <- qplot(x = trait1,
+                         y = trait2,
+                         fill = correlation, 
+                         geom = "tile",
+                         data = ct_cor_long) +
+    scale_fill_gradient2(limits = c(-1, 1)) +
+    scale_x_discrete(limits = pretty_ct_trait_names$name,
+                     labels = pretty_ct_trait_names$pretty_name) +
+    scale_y_discrete(limits = pretty_ct_trait_names$name,
+                     labels = pretty_ct_trait_names$pretty_name) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -90),
+          panel.grid = element_blank()) +
+    xlab("") + ylab("") + ggtitle("Pearson correlation between pQCT phenotypes")
+
+
+ct_pca_variance <- data.frame(var_explained = summary(ct_pca)$importance["Proportion of Variance",])
+ct_pca_variance$PC <- sub(rownames(ct_pca_variance),
+                          pattern = "PC",
+                          replacement = "")
+
+
+plot_ct_pc_variance <- ggplot() +
+    geom_bar(aes(x = PC,
+                 y = var_explained),
+             data = ct_pca_variance,
+             stat = "identity") +
+    scale_x_discrete(limits = ct_pca_variance$PC) +
+    theme_bw() +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank()) +
+    ylim(0, 1) +
+    xlab("Principal component") +
+    ylab("Proportion variance explained") +
+    ggtitle("Variance explained by pQCT principal components")
+
+
+
+plot_ct_heatmap_pc_combined <- ggarrange(plot_ct_heatmap, plot_ct_pc_variance,
+                                         heights = c(2, 1))
+
+pdf("figures/plot_ct_pca.pdf")
+print(plot_ct_heatmap_pc_combined)
+dev.off()
+
+
+pdf("figures/plot_ct_pca_loadings.pdf")
+print(plot_ct_loadings)
+dev.off()
 
 ## FTIR phenotypes
 
@@ -305,7 +390,6 @@ tga_ix <- grep("MB$|CB$", colnames(pheno))
 
 tga_cor <- cor(pheno[, tga_ix], use = "p")
 
-
 tga_animals <- na.exclude(pheno[, c(1, tga_ix)])$animal_id
 
 tga_pheno <- filter(pheno, animal_id %in% tga_animals)
@@ -324,8 +408,86 @@ plot_tga_pcs <- qplot(x = name,
 
 plot_tga_load <- qplot(x = load_N,
                        y = value,
-                       colour = cage.pen,
+                       colour = cage.penn,
                        data = long_tga_pca) +
     facet_wrap(~ name,
                scale = "free") +
     geom_smooth(method = lm)
+
+
+pretty_tga_trait_names <- read_csv("pretty_trait_names_tga.csv")
+
+tga_cor_long <- pivot_longer(data.frame(trait1 = rownames(tga_cor),
+                                       tga_cor,
+                                       stringsAsFactors = FALSE),
+                            -trait1,
+                            values_to = "correlation",
+                            names_to = "trait2")
+
+plot_tga_heatmap <- qplot(x = trait1,
+                         y = trait2,
+                         fill = correlation, 
+                         geom = "tile",
+                         data = tga_cor_long) +
+    scale_fill_gradient2(limits = c(-1, 1)) +
+    scale_x_discrete(limits = pretty_tga_trait_names$name,
+                     labels = pretty_tga_trait_names$pretty_name) +
+    scale_y_discrete(limits = pretty_tga_trait_names$name,
+                     labels = pretty_tga_trait_names$pretty_name) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -90),
+          panel.grid = element_blank()) +
+    xlab("") + ylab("") + ggtitle("Pearson correlation between TGA phenotypes")
+
+
+tga_pca_loadings <- data.frame(trait = rownames(tga_pca$rotation),
+                               tga_pca$rotation[,1:6],
+                               stringsAsFactors = FALSE)
+
+tga_pca_loadings_long <- pivot_longer(tga_pca_loadings, -trait,
+                                     names_to = "PC")
+
+plot_tga_loadings <- ggplot() +
+    geom_bar(aes(x = trait, y = value),
+             data = tga_pca_loadings_long,
+             stat = "identity") +
+    scale_x_discrete(limits = pretty_tga_trait_names$name,
+                     labels = pretty_tga_trait_names$pretty_name) +
+    facet_wrap(~ PC, ncol = 1) +
+    coord_flip() +
+    theme_bw() +
+    ylab("") +
+    xlab("") +
+    theme(panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank()) +
+    ggtitle("Principial component loadings")
+
+
+
+tga_pca_variance <- data.frame(var_explained = summary(tga_pca)$importance["Proportion of Variance",])
+tga_pca_variance$PC <- sub(rownames(tga_pca_variance),
+                           pattern = "PC",
+                           replacement = "")
+
+
+plot_tga_pc_variance <- ggplot() +
+    geom_bar(aes(x = PC,
+                 y = var_explained),
+             data = tga_pca_variance,
+             stat = "identity") +
+    scale_x_discrete(limits = tga_pca_variance$PC) +
+    theme_bw() +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank()) +
+    ylim(0, 1) +
+    xlab("Principal component") +
+    ylab("Proportion variance explained") +
+    ggtitle("Variance explained by TGA principal components")
+
+
+plot_tga_heatmap_pc_combined <- ggarrange(plot_tga_heatmap, plot_tga_pc_variance,
+                                          heights = c(2, 1))
+
+pdf("figures/plot_tga_pca.pdf")
+print(plot_tga_heatmap_pc_combined)
+dev.off()
