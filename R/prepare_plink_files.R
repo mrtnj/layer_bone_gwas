@@ -300,8 +300,8 @@ write_ped <- function(x, filename) write.table(x,
 
 ## Covariates
 
-write_plink(covar_all_cagepen_breed_weight, "gwas/covar_all_cagepen_breed_weight.txt")
-write_plink(covar_all_cagepen_breed, "gwas/covar_all_cagepen_breed.txt")
+write_plink(covar_all_cagepen_breed_weight, "gwas/covar_all_breed_weight.txt")
+write_plink(covar_all_cagepen_breed, "gwas/covar_all_breed.txt")
 
 write_plink(covar_pen_breed_weight, "gwas/covar_pen_breed_weight.txt")
 write_plink(covar_cage_breed_weight, "gwas/covar_cage_breed_weight.txt")
