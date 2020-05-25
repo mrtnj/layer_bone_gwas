@@ -1,0 +1,15 @@
+name,pretty_name
+WaterLost_MB,medullary water lost
+OMLost_MB,medullary organic matter lost
+CO2Lost_MB,medullary carbon dioxide lost
+Mineral_MB,medullary mineral
+Phosphates_MB,medullary phosphates
+Phosphates_over_OM_MB,medullary phosphates/organic matter
+CO3_over_Phosphates_MB,medullary carbonate/phosphates
+WaterLost_CB,cortical water lost
+OMLost_CB,cortical organic matter lost
+Mineral_CB,cortical mineral
+CO2Lost_CB,cortical carbon dioxide lost
+Phosphates_CB,cortical phosphates
+Phosphates_over_OM_CB,cortical phosphates/organic matter
+CO3_over_Phosphates_CB,cortical carbonate/phosphates
