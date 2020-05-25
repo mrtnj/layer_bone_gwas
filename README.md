@@ -14,6 +14,13 @@ sequences for alignment.
 new positions.
 
 
+## Exploratory analysis
+
+* R/plot_genotypes.R -- QC of SNP genotypes
+
+* R/plot_phenotypes.R -- Plots and linear models of phentotypes
+
+
 ## Format plink files for GEMMA
 
 * R/prepare_plink_files.R -- Reads text files of genotypes and phenotypes
