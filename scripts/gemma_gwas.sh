@@ -48,124 +48,32 @@ function run_gwas () {
 }
 
 
-run_gwas all_load_adj \
-	 all \
-	 fam_all_load.fam \
-	 covar_all_cagepen_breed_weight.txt
+for TRAIT in load_N comb_g ct_pc1 ct_pc2 ct_pc3 \
+             WaterLost_CB OMLost_CB CO2Lost_CB \
+             Phosphates_CBMineral_CB Phosphates_over_OM_CB \
+             CO3_over_Phosphates_CB WaterLost_MB OMLost_MB \
+             CO2Lost_MB Phosphates_MB Mineral_MB \
+             Phosphates_over_OM_MB CO3_over_Phosphates_MB; do
+            
+             for GROUP in all pen cage; do
+            
+                 run_gwas ${GROUP}_${TRAIT} \
+                          ${GROUP} \
+	                      fam_all_${TRAIT}.fam \
+	                      covar_${GROUP}_cagepen_breed_weight.txt
+	                     
+             done
+            
+done
 
-run_gwas all_load \
-	 all \
-	 fam_all_load.fam \
-	 covar_all_cagepen_breed.txt
+for GROUP in all pen cage; do
 
-run_gwas all_weight \
-	 all \
-	 fam_all_weight.fam \
-	 covar_all_cagepen_breed.txt
-
-run_gwas all_comb_adj \
-	 all \
-	 fam_all_comb.fam \
-	 covar_all_cagepen_breed_weight.txt
-
-run_gwas all_ct1 \
-	 all \
-	 fam_all_ct1.fam \
-	 covar_all_cagepen_breed_weight.txt
-
-run_gwas all_ct2 \
-	 all \
-	 fam_all_ct2.fam \
-	 covar_all_cagepen_breed_weight.txt
-
-run_gwas all_ct3 \
-	 all \
-	 fam_all_ct3.fam \
-	 covar_all_cagepen_breed_weight.txt
-
-
-
-run_gwas pen_load_adj \
-	 pen \
-	 fam_pen_load.fam \
-	 covar_pen_breed_weight.txt
-
-run_gwas pen_load \
-	 pen \
-	 fam_pen_load.fam \
-	 covar_pen_breed.txt
-
-run_gwas pen_weight \
-	 pen \
-	 fam_pen_weight.fam \
-	 covar_pen_breed.txt
-
-run_gwas pen_comb_adj \
-	 pen \
-	 fam_pen_comb.fam \
-	 covar_pen_breed_weight.txt
-
-run_gwas pen_load_weight \
-	 pen \
-	 fam_pen_load.fam \
-	 covar_pen_weight.txt
-
-run_gwas pen_ct1 \
-	 pen \
-	 fam_pen_ct1.fam \
-	 covar_pen_breed_weight.txt
-
-run_gwas pen_ct2 \
-	 pen \
-	 fam_pen_ct2.fam \
-	 covar_pen_breed_weight.txt
-
-run_gwas pen_ct3 \
-	 pen \
-	 fam_pen_ct3.fam \
-	 covar_pen_breed_weight.txt
-
-
-
-run_gwas cage_load_adj \
-	 cage \
-	 fam_cage_load.fam \
-	 covar_cage_breed_weight.txt
-
-run_gwas cage_load \
-	 cage \
-	 fam_cage_load.fam \
-	 covar_cage_breed.txt
-
-run_gwas cage_weight \
-	 cage \
-	 fam_cage_weight.fam \
-	 covar_cage_breed.txt
-
-run_gwas cage_comb_adj \
-	 cage \
-	 fam_cage_comb.fam \
-	 covar_cage_breed_weight.txt
-
-run_gwas cage_load_weight \
-	 cage \
-	 fam_cage_load.fam \
-	 covar_cage_weight.txt
-
-run_gwas cage_ct1 \
-	 cage \
-	 fam_cage_ct1.fam \
-	 covar_cage_breed_weight.txt
-
-run_gwas cage_ct2 \
-	 cage \
-	 fam_cage_ct2.fam \
-	 covar_cage_breed_weight.txt
-
-run_gwas cage_ct3 \
-	 cage \
-	 fam_cage_ct3.fam \
-	 covar_cage_breed_weight.txt
+    run_gwas ${GROUP}_weight \
+	          ${GROUP} \
+	          fam_${GROUP}_weight.fam \
+	          covar_${GROUP}_cagepen_breed.txt
+	          
+done
 
 
 
