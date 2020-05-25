@@ -1,0 +1,17 @@
+name,pretty_name
+ct_distal_TOT_CNT,distal total content
+ct_distal_TOT_DEN,distal total density
+ct_distal_TRAB_CNT,distal medullary content
+ct_distal_TRAB_DEN,distal medullary density
+ct_distal_CRT_CNT,distal cortical content
+ct_distal_CRT_DEN,distal cortical density
+ct_distal_CRT_THK_C,distal cortical thickness
+ct_distal_OBJECTLEN,bone length (distal run)
+ct_mid_TOT_CNT,mid total content
+ct_mid_TOT_DEN,mid total density
+ct_mid_TRAB_CNT,mid medullary content
+ct_mid_TRAB_DEN,mid medullary density
+ct_mid_CRT_CNT,mid cortical content
+ct_mid_CRT_DEN,mid cortical density
+ct_mid_CRT_THK_C,mid cortical thickness
+ct_mid_OBJECTLEN,bone length (mid run)
