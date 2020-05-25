@@ -23,6 +23,8 @@ new positions.
 
 ## Format plink files for GEMMA
 
+* R/make_pheno_table.R -- Collect all phenotypes in one file
+
 * R/prepare_plink_files.R -- Reads text files of genotypes and phenotypes
 to create ped and phenotype files for GEMMA.
 
