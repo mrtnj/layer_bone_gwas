@@ -17,7 +17,7 @@ source("R/gwas_helper_functions.R")
 
 files <- system("ls gwas/*/output/*assoc.txt", intern = TRUE)
 
-scan_name <- str_match(files, "/([a-z_]+)\\.assoc\\.txt")[,2]
+scan_name <- str_match(files, "/([A-Za-z_0-9]+)\\.assoc\\.txt")[,2]
 
 results <- lapply(files,
                   read_tsv,
@@ -28,28 +28,44 @@ for (file_ix in 1:length(results)) {
     results[[file_ix]]$numeric_chr <- as.numeric(results[[file_ix]]$chr)
 }
 
-## qq(results[[8]]$p_wald)
-## manhattan(na.exclude(results[[5]]), chr = "numeric_chr", p = "p_wald", bp = "ps", snp = "rs")
-
 
 
 gwas <- Reduce(rbind, results)
 
-gwas$scan_name_pretty <- gwas$scan_name
-gwas$scan_name_pretty[gwas$scan_name_pretty == "cage_weight"] <- "Body weight (CAGE)"
-gwas$scan_name_pretty[gwas$scan_name_pretty == "pen_weight"] <- "Body weight (PEN)"
-gwas$scan_name_pretty[gwas$scan_name_pretty == "all_weight"] <- "Body weight (JOINT)"
-gwas$scan_name_pretty[gwas$scan_name_pretty == "all_load_adj"] <-
-    "Tibial breaking strength (JOINT)"
-gwas$scan_name_pretty[gwas$scan_name_pretty == "pen_load_adj"] <-
-    "Tibial breaking strength (PEN)"
 
-gwas$scan_name_pretty <- factor(gwas$scan_name_pretty,
-                                levels=c("Body weight (CAGE)",
-                                         "Body weight (PEN)",
-                                         "Body weight (JOINT)",
-                                         "Tibial breaking strength (PEN)",
-                                         "Tibial breaking strength (JOINT)"))
+## Pretty names
+
+
+gwas$group <- str_match(gwas$scan_name, "cage|pen|all")
+
+gwas$scan_name_without_group <- sub(gwas$scan_name,
+                                    pattern = "cage_|pen_|all_",
+                                    replacement = "")
+
+
+pretty_tga_names <- read_csv("pretty_trait_names_tga.csv")
+
+pretty_names <- rbind(data.frame(name = c("load_N",
+                                          "weight",
+                                          "ct_pc1",
+                                          "ct_pc2",
+                                          "ct_pc3"),
+                                 pretty_name = c("tibial breaking strength",
+                                                 "body weight",
+                                                 "pQCT component 1",
+                                                 "pQCT component 2",
+                                                 "pQCT component 3"),
+                                 stringsAsFactors = FALSE),
+                      pretty_tga_names)
+colnames(pretty_names)[1] <- "scan_name_without_group"
+
+gwas <- inner_join(gwas, pretty_names)
+
+gwas$scan_name_pretty <- paste(gwas$pretty_name,
+                               " (",
+                               gwas$group,
+                               ")",
+                               sep = "")
 
 gwas$chr_numeric <- as.numeric(gwas$chr)
 
@@ -92,15 +108,15 @@ formatting <- list(geom_hline(yintercept = -log10(5e-8),
                    xlab(""),
                    ylab(""))
 
-plot_manhattan_cage_load <- plot_manhattan(filter(gwas, scan_name == "cage_load_adj")) +
+plot_manhattan_cage_load <- plot_manhattan(filter(gwas, scan_name == "cage_load_N")) +
     formatting +
     ylim(0, 10) +
     ggtitle("Bone breaking strength (CAGE)")
-plot_manhattan_pen_load <- plot_manhattan(filter(gwas, scan_name == "pen_load_adj")) +
+plot_manhattan_pen_load <- plot_manhattan(filter(gwas, scan_name == "pen_load_N")) +
     formatting +
     ylim(0, 10) +
     ggtitle("Bone breaking strength (PEN)")
-plot_manhattan_all_load <- plot_manhattan(filter(gwas, scan_name == "all_load_adj")) +
+plot_manhattan_all_load <- plot_manhattan(filter(gwas, scan_name == "all_load_N")) +
     formatting +
     ylim(0, 10) +
     ggtitle("Bone breaking strength (JOINT)")
@@ -140,13 +156,13 @@ dev.off()
 
 ## QQ-plots
 
-plot_qq_cage_load <- plot_qq(filter(gwas, scan_name == "cage_load_adj")$p_wald) +
+plot_qq_cage_load <- plot_qq(filter(gwas, scan_name == "cage_load_N")$p_wald) +
     ggtitle("Bone breaking strength (CAGE)")
 
-plot_qq_pen_load <- plot_qq(filter(gwas, scan_name == "pen_load_adj")$p_wald) +
+plot_qq_pen_load <- plot_qq(filter(gwas, scan_name == "pen_load_N")$p_wald) +
     ggtitle("Bone breaking strength (PEN)")
 
-plot_qq_all_load <- plot_qq(filter(gwas, scan_name == "all_load_adj")$p_wald) +
+plot_qq_all_load <- plot_qq(filter(gwas, scan_name == "all_load_N")$p_wald) +
     ggtitle("Bone breaking strength (JOINT)")
 
 
@@ -264,7 +280,7 @@ suggestive_regions <- summarise(group_by(suggestive, chr, scan_name),
 
 
 suggestive_load <- filter(suggestive_regions,
-                          scan_name %in% c("pen_load_adj", "cage_load_adj", "all_load_adj"))
+                          scan_name %in% c("pen_load_N", "cage_load_N", "all_load_N"))
 
 
 suggestive_load_list <- vector(mode = "list",
@@ -306,7 +322,7 @@ dev.off()
 ## Correlation between scans
 
 gwas_load_systems <- filter(gwas,
-                            scan_name %in% c("pen_load_adj", "cage_load_adj"))
+                            scan_name %in% c("pen_load_N", "cage_load_N"))
 
 load_comparison <- pivot_wider(gwas_load_systems[, c("rs", "p_wald", "beta", "scan_name")],
                                values_from = c("beta", "p_wald"),
@@ -326,21 +342,21 @@ formatting_comparison <- list(theme_bw(),
                               ylab("PEN"))
 
 
-plot_load_comparison_p <- qplot(x = -log10(p_wald_cage_load_adj),
-                                y = -log10(p_wald_pen_load_adj),
+plot_load_comparison_p <- qplot(x = -log10(p_wald_cage_load_N),
+                                y = -log10(p_wald_pen_load_N),
                                 data = filter(load_comparison,
-                                              p_wald_cage_load_adj < 1e-3 |
-                                              p_wald_pen_load_adj < 1e-3)) +
+                                              p_wald_cage_load_N < 1e-3 |
+                                              p_wald_pen_load_N < 1e-3)) +
     ggtitle("Tibial breaking strength \nNegative logarithm of p-value") +
     formatting_comparison +
     xlim(0, 10) +
     ylim(0, 10)
 
-plot_load_comparison_beta <- qplot(x = beta_cage_load_adj,
-                                   y = beta_pen_load_adj,
+plot_load_comparison_beta <- qplot(x = beta_cage_load_N,
+                                   y = beta_pen_load_N,
                                    data = filter(load_comparison,
-                                                 p_wald_cage_load_adj < 1e-3 |
-                                                 p_wald_pen_load_adj < 1e-3)) +
+                                                 p_wald_cage_load_N < 1e-3 |
+                                                 p_wald_pen_load_N < 1e-3)) +
     geom_hline(yintercept = 0, colour = "red", linetype = 2) +
     geom_vline(xintercept = 0, colour = "red", linetype = 2) +
     ggtitle("Tibial breaking strength \nEstimated marker effect") +
@@ -387,28 +403,65 @@ cor.test(filter(weight_comparison,
                 p_wald_pen_weight < 1e-3)$beta_pen_weight)
 
 cor.test(filter(load_comparison,
-                p_wald_cage_load_adj < 1e-3 |
-                p_wald_pen_load_adj < 1e-3)$beta_cage_load_adj,
+                p_wald_cage_load_N < 1e-3 |
+                p_wald_pen_load_N < 1e-3)$beta_cage_load_N,
          filter(load_comparison,
-                p_wald_cage_load_adj < 1e-3 |
-                p_wald_pen_load_adj < 1e-3)$beta_pen_load_adj)
+                p_wald_cage_load_N < 1e-3 |
+                p_wald_pen_load_N < 1e-3)$beta_pen_load_N)
 
 
 ## Tables
 
-significant_table <- significant[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
+## significant_table <- significant[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
 
 
-write.csv(significant_table,
-          file = "tables/gwas_significant.csv",
-          quote = FALSE,
-          row.names = FALSE)
+## write.csv(significant_table,
+##           file = "tables/gwas_significant.csv",
+##           quote = FALSE,
+##           row.names = FALSE)
 
 
-suggestive_table <- suggestive_load[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
+## suggestive_table <- suggestive_load[, c("scan_name", "rs", "chr", "ps", "p_wald", "beta")]
 
 
-write.csv(candidate_table,
-          file = "tables/gwas_suggestive.csv",
-          quote = FALSE,
-          row.names = FALSE)
+## write.csv(candidate_table,
+##           file = "tables/gwas_suggestive.csv",
+##           quote = FALSE,
+##           row.names = FALSE)
+
+
+
+## Special plots for TAGC poster
+
+
+poster_formatting <- list(geom_hline(yintercept = -log10(5e-8),
+                                     colour = "black",
+                                     linetype = 2),
+                          geom_hline(yintercept = -log10(1e-4),
+                                     colour = "grey",
+                                     linetype = 2),
+                          theme_bw(base_size = 14),
+                          theme(panel.grid = element_blank(),
+                                legend.position = "none",
+                                axis.ticks.x = element_blank(),
+                                axis.text.x = element_blank()),
+                          scale_colour_manual(values = c("#ce0037", "#00b0b9")),
+                          xlab(""),
+                          ylab(""),
+                          ylim(0, 17))
+
+plot_manhattan_poster <- ggarrange(plot_manhattan_cage_load +
+                                   poster_formatting,
+                                   plot_manhattan_pen_load +
+                                   poster_formatting,
+                                   plot_manhattan_all_load +
+                                   poster_formatting,
+                                   plot_manhattan_cage_weight +
+                                   poster_formatting,
+                                   plot_manhattan_pen_weight +
+                                   poster_formatting,
+                                   plot_manhattan_all_weight +
+                                   poster_formatting,
+                                   left = "Negative logarithm of p-value",
+                                   ncol = 2,
+                                   byrow = FALSE)
