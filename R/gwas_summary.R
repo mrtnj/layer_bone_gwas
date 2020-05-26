@@ -4,6 +4,7 @@
 library(dplyr)
 library(egg)
 library(ggplot2)
+library(ggrastr)
 library(qqman)
 library(readr)
 library(stringr)
@@ -33,8 +34,7 @@ for (file_ix in 1:length(results)) {
 gwas <- Reduce(rbind, results)
 
 
-## Pretty names
-
+## Pretty names and reduce to only load, weight, qQCT and TGA runs
 
 gwas$group <- str_match(gwas$scan_name, "cage|pen|all")
 
@@ -74,7 +74,7 @@ saveRDS(gwas,
 
 
 
-## Plots
+## Set up chromosome lengths and marker positions for Manhattan plots
 
 chr_lengths <- summarise(group_by(gwas, chr), length = unique(max(ps)))
 preferred_order <- c(1:28, 30:31, 33, "Un_NW_020110160v1", "Un_NW_020110165v1", "Z")
@@ -107,6 +107,9 @@ formatting <- list(geom_hline(yintercept = -log10(5e-8),
                    scale_colour_manual(values = c("grey", "black")),
                    xlab(""),
                    ylab(""))
+
+
+## Main Manhattan plot of breaking strenght and body weight scans
 
 plot_manhattan_cage_load <- plot_manhattan(filter(gwas, scan_name == "cage_load_N")) +
     formatting +
@@ -154,7 +157,8 @@ dev.off()
 
 
 
-## QQ-plots
+
+## Main QQ-plots of the same
 
 plot_qq_cage_load <- plot_qq(filter(gwas, scan_name == "cage_load_N")$p_wald) +
     ggtitle("Bone breaking strength (CAGE)")
@@ -192,6 +196,28 @@ plot_qq_combined <- ggarrange(plot_qq_cage_load,
 pdf("figures/plot_qq.pdf")
 print(plot_qq_combined)
 dev.off()
+
+
+
+## Manhattan plots and QQ plots of all scans separately
+
+scans <- unique(gwas$scan_name)
+
+pdf("figures/supplementary_data_manhattans.pdf")
+for (scan_ix in 1:length(scans)) {
+
+    manhattan <- plot_manhattan_raster(gwas[gwas$scan_name == scans[scan_ix],]) +
+        formatting +
+        ggtitle(unique(gwas[gwas$scan_name == scans[scan_ix],]$scan_name_pretty))
+    
+    qq <- plot_qq_raster(gwas[gwas$scan_name == scans[scan_ix],]$p_wald)
+    
+    print((manhattan / qq))
+        
+}
+
+dev.off()
+
 
 
 ## Candidate regions
