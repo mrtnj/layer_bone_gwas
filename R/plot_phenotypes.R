@@ -52,37 +52,48 @@ plot_scatter <- qplot(x = weight, y = value, colour = cage.pen, data = long_scat
 
 ## Dotplots of variables with models
 
-long_split <- split(long, long$variable)
+model_breed_cagepen <- function(long) {
 
-models <- lapply(long_split,
-                 function(x) lm(value ~ breed * cage.pen, data = x))
+    long_split <- split(long, long$variable)
 
-levels <- expand.grid(cage.pen = c("CAGE", "PEN"),
-                      breed = c("LSL", "Bovans"),
-                      stringsAsFactors = FALSE)
+    models <- lapply(long_split,
+                     function(x) lm(value ~ breed * cage.pen, data = x))
+    
+    levels <- expand.grid(cage.pen = c("CAGE", "PEN"),
+                          breed = c("LSL", "Bovans"),
+                          stringsAsFactors = FALSE)
+    
+    ## Get fits for cells
+    
+    fit <- lapply(models,
+                  predict,
+                  newdata = levels,
+                  interval = "confidence")
+    
+    fit_levels <- lapply(fit, cbind, levels)
+    
+    fits <- Reduce(rbind, fit_levels)
+    fits$variable <- rep(names(fit), each = nrow(levels))
+    
+    
+    ## Get comparisons
+    
+    coef <- lapply(models,
+                   tidy,
+                   conf.int = TRUE)
+    
+    coefs <- Reduce(rbind, coef)
+    coefs$variable <- rep(names(coef), each = nrow(coef[[1]]))
 
-## Get fits for cells
+    list(models = models,
+         fits = fits,
+         coefs = coefs)
+}
 
-fit <- lapply(models,
-              predict,
-              newdata = levels,
-              interval = "confidence")
+models_load_weight <- model_breed_cagepen(long)
 
-fit_levels <- lapply(fit, cbind, levels)
-
-fits <- Reduce(rbind, fit_levels)
-fits$variable <- rep(names(fit), each = nrow(levels))
-
-
-## Get comparisons
-
-coef <- lapply(models,
-               tidy,
-               conf.int = TRUE)
-
-coefs <- Reduce(rbind, coef)
-coefs$variable <- rep(names(coef), each = nrow(coef[[1]]))
-
+fits <- models_load_weight$fits
+coefs <- models_load_weight$coefs
 
 
 plot_dots <- ggplot() +
@@ -94,11 +105,6 @@ plot_dots <- ggplot() +
                     data = fits) +
     facet_wrap(~ variable, scale = "free")
 
-
-## Model with group effect
-
-model <- lmer(load_N ~ breed * cage.pen + (1 | group),
-              data = pheno)
 
 
 
@@ -236,6 +242,8 @@ ct_trait_names <- c("TOT_CNT", "TOT_DEN",
                     "CRT_CNT", "CRT_DEN",
                     "CRT_THK_C", "OBJECTLEN")
 
+pretty_ct_trait_names <- read_csv("pretty_trait_names_pqct.csv")
+
 ct_ix <- which(colnames(pheno) %in%
                c(paste("ct_mid_", ct_trait_names, sep = ""),
                  paste("ct_distal_", ct_trait_names, sep = "")))
@@ -291,8 +299,6 @@ plot_ct_load <- qplot(x = load_N,
 
 
 ## pQCT heatmap
-
-pretty_ct_trait_names <- read_csv("pretty_trait_names_pqct.csv")
 
 ct_cor_long <- pivot_longer(data.frame(trait1 = rownames(ct_cor),
                                        ct_cor,
@@ -491,3 +497,39 @@ plot_tga_heatmap_pc_combined <- ggarrange(plot_tga_heatmap, plot_tga_pc_variance
 pdf("figures/plot_tga_pca.pdf")
 print(plot_tga_heatmap_pc_combined)
 dev.off()
+
+
+## Figure of differences between systems and association with load
+
+
+tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, tga_ix)],
+                               -c(animal_id, cage.pen, breed),
+                               names_to = "variable")
+
+models_tga <- model_breed_cagepen(tga_pheno_long)
+
+fits_tga <- models_tga$fits
+coefs_tga <- models_tga$coefs
+
+
+plot_tga_pheno <- ggplot() +
+    geom_jitter(aes(colour = breed,
+                    y = value,
+                    x = cage.pen),
+                alpha = I(0.2),
+                data = tga_pheno_long) +
+    geom_pointrange(aes(colour = breed,
+                        y = fit,
+                        ymin = lwr,
+                        ymax = upr,
+                        x = cage.pen),
+                    position = position_dodge(0.5),
+                    data = fits_tga) +
+    facet_wrap(~ variable, scale = "free_y") +
+    scale_colour_manual(values = c("blue", "red"),
+                        name = "") +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank()) +
+    xlab("") +
+    ylab("")
