@@ -39,6 +39,8 @@ to create ped and phenotype files for GEMMA.
 
 * R/gwas_summary.R -- Summarise and visualise results
 
+* R/gwas_overlap.R -- Investigate overlaps between GWAS for different traits
+
 
 ## Run GCTA for genomic correlations
 
