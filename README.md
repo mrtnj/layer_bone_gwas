@@ -45,3 +45,12 @@ to create ped and phenotype files for GEMMA.
 ## Run GCTA for genomic correlations
 
 * scripts/genomic_correlation_gcta.sh
+
+
+## Simulations
+
+* R/simulation.R -- Fake data simulation for given genetic architecture
+
+* scripts/simulated_gwas.sh -- Run GWAS on simulated data
+
+* R/simulation_results.R -- Summarise results
