@@ -50,7 +50,7 @@ function run_gwas () {
 
 for TRAIT in load_N comb_g ct_pc1 ct_pc2 ct_pc3 \
              WaterLost_CB OMLost_CB CO2Lost_CB \
-             Phosphates_CBMineral_CB Phosphates_over_OM_CB \
+             Phosphates_CB Mineral_CB Phosphates_over_OM_CB \
              CO3_over_Phosphates_CB WaterLost_MB OMLost_MB \
              CO2Lost_MB Phosphates_MB Mineral_MB \
              Phosphates_over_OM_MB CO3_over_Phosphates_MB; do
