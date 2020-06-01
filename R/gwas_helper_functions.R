@@ -57,8 +57,7 @@ plot_manhattan_raster <- function(data) {
 
 flatten_coordinates <- function(chr,
                                 pos,
-                                chr_lengths,
-                                chr_breaks) {
+                                chr_lengths) {
     pos_flat <- pos
     offset <- 0
  
