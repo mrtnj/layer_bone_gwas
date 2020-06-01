@@ -7,6 +7,7 @@ library(ggplot2)
 library(ggrastr)
 library(qqman)
 library(readr)
+library(patchwork)
 library(stringr)
 library(tidyr)
 
