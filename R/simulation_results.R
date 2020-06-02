@@ -8,10 +8,13 @@ library(readr)
 
 
 source("R/gwas_helper_functions.R")
+source("R/simulation_helper_functions.R")
 
-gwas <- read_tsv("simulations/output/simulation1.assoc.txt")
+gwas_joint <- read_tsv("simulations/shared/output/shared1_joint.assoc.txt")
+gwas_e1 <- read_tsv("simulations/shared/output/shared1_e1.assoc.txt")
+gwas_e2 <- read_tsv("simulations/shared/output/shared1_e2.assoc.txt")
 
-qtl <- read_delim("simulations/simulation1_qtl.txt", delim = " ")
+qtl <- read_delim("simulations/shared/shared1_qtl.txt", delim = " ")
 
 qtl <- filter(qtl, frequency > 0)
 
@@ -30,18 +33,22 @@ chr_breaks$chr_masked <- chr_breaks$chr
 
 
 
-plot_manhattan <- plot_manhattan(gwas)
+plot_joint <- plot_manhattan(gwas)
 
 
 
-suggestive <- filter(gwas, p_wald < 10^-6)
+qtl$detected_joint <- find_detected_qtl(gwas_joint,
+                                        threshold = 1e-6,
+                                        flank = 0.5e6,
+                                        qtl)
 
-suggestive_ranges <- GRanges(seqnames = suggestive$chr,
-                             ranges = IRanges(suggestive$ps - 0.5e6,
-                                              suggestive$ps + 0.5e6))
+qtl$detected_e1 <- find_detected_qtl(gwas_e1,
+                                     threshold = 1e-6,
+                                     flank = 0.5e6,
+                                     qtl)
 
-suggestive_regions <- reduce(suggestive_ranges)
+qtl$detected_e2 <- find_detected_qtl(gwas_e2,
+                                     threshold = 1e-6,
+                                     flank = 0.5e6,
+                                     qtl)
 
-
-qtl_ranges <- GRanges(seqnames = qtl$chr,
-                      ranges = IRanges(qtl$pos, qtl$pos))
