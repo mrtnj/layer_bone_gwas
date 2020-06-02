@@ -1,0 +1,8 @@
+TOT_CNT total bone content per 1mm slice [mg/mm]
+TOT_DEN total bone density [mg/ccm]
+TRAB_CNT trabecular content per 1mm slice [mg/mm]
+TRAB_DEN trabecular density [mg/ccm]
+CRT_CNT cortical content per 1mm slice [mg/mm]
+CRT_DEN cortical density [mg/ccm
+CRT_THK mean cortical thickness, defined by the distance between outer and inner egde of the cortical shell in [mm]
+OBJECTLEN object length (mm)
