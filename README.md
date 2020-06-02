@@ -49,8 +49,14 @@ to create ped and phenotype files for GEMMA.
 
 ## Simulations
 
-* R/simulation.R -- Fake data simulation for given genetic architecture
+* R/simulation_shared.R -- Fake data simulation for shared genetic architecture
+
+* R/simulation_gxe.R -- Fake data simulation for GxE
 
 * scripts/simulated_gwas.sh -- Run GWAS on simulated data
 
+* scripts/simulated_gwas_gxe.sh -- Run GWAS on simulated data with GxE
+
 * R/simulation_results.R -- Summarise results
+
+* R/simulation_results_gxe.R -- Summarise results with GxE
