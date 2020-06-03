@@ -18,7 +18,7 @@ for (rep_ix in 1:10) {
     
     simparam$setGender("no")
     
-    simparam$addTraitA(nQtlPerChr = 5)
+    simparam$addTraitA(nQtlPerChr = 1)
     simparam$setVarE(h2 = 0.3)
     
     simparam$addSnpChip(nSnpPerChr = 1000)
