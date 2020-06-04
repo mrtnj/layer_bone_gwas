@@ -4,21 +4,18 @@
 library(dplyr)
 library(GenomicRanges)
 library(ggplot2)
-library(patchwork)
 library(readr)
 
 
 source("R/gwas_helper_functions.R")
-source("R/simulation_helper_functions.R")
 
-
-files_joint <- paste("simulations/shared/output/shared", 1:10,
+files_joint <- paste("simulations/gxe/output/gxe", 1:10,
                      "_joint.assoc.txt", sep = "")
-files_e1 <- paste("simulations/shared/output/shared", 1:10,
+files_e1 <- paste("simulations/gxe/output/gxe", 1:10,
                   "_e1.assoc.txt", sep = "")
-files_e2 <- paste("simulations/shared/output/shared", 1:10,
+files_e2 <- paste("simulations/gxe/output/gxe", 1:10,
                   "_e2.assoc.txt", sep = "")
-files_qtl <- paste("simulations/shared/shared", 1:10,
+files_qtl <- paste("simulations/gxe/gxe", 1:10,
                    "_qtl.txt", sep = "")
 
 
@@ -26,7 +23,7 @@ detected_qtl <- vector(length = 10,
                        mode = "list")
 
 for (rep_ix in 1:10) {
-
+    
     gwas_joint <- read_tsv(files_joint[rep_ix])
     gwas_e1 <- read_tsv(files_e1[rep_ix])
     gwas_e2 <- read_tsv(files_e2[rep_ix])
@@ -61,7 +58,7 @@ for (rep_ix in 1:10) {
     plot_e1 <- plot_manhattan(gwas_e1)
     plot_e2 <- plot_manhattan(gwas_e2)
     
-    pdf(paste("simulations/shared/shared", rep_ix, "_manhattan.pdf", sep = ""))
+    pdf(paste("simulations/gxe/gxe", rep_ix, "_manhattan.pdf", sep = ""))
     print(plot_joint / plot_e1 / plot_e2)
     dev.off()
     
@@ -83,7 +80,8 @@ for (rep_ix in 1:10) {
     detected_qtl[[rep_ix]] <- qtl
     
     write_tsv(qtl,
-              paste("simulations/shared/shared", rep_ix, "_detected_qtl.txt", sep = ""))
+              paste("simulations/gxe/gxe", rep_ix, "_detected_qtl.txt", sep = ""))
+    
     
     ## Scan comparison
     
@@ -99,7 +97,7 @@ for (rep_ix in 1:10) {
                                data = filter(comparison,
                                              p_wald_environment1 < 1e-3 |
                                                  p_wald_environment2 < 1e-3))
-    
+
     plot_comparison_b <- qplot(x = beta_environment1,
                                y = beta_environment2,
                                data = filter(comparison,
@@ -108,9 +106,10 @@ for (rep_ix in 1:10) {
         geom_hline(yintercept = 0, colour = "red", linetype = 2) +
         geom_vline(xintercept = 0, colour = "red", linetype = 2)
     
-    pdf(paste("simulations/shared/shared", rep_ix, "_scan_comparison.pdf", sep = ""))
+    pdf(paste("simulations/gxe/gxe", rep_ix, "_scan_comparison.pdf", sep = ""))
     print(plot_comparison_p / plot_comparison_b)
     dev.off()
+    
 }
 
 
