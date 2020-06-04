@@ -9,7 +9,7 @@ set -eu
 cd simulations/shared
 
 
-for REP in {1..10}; do
+for REP in {1..50}; do
 
     ## Convert ped to bed with plink
 

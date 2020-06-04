@@ -6,8 +6,9 @@ library(dplyr)
 
 source("R/simulation_helper_functions.R")
 
+n_rep <- 50
 
-for (rep_ix in 1:10) {
+for (rep_ix in 1:n_rep) {
 
     founderpop <- create_founder_population()
 
