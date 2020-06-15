@@ -5,6 +5,7 @@ library(assertthat)
 library(dplyr)
 library(readr)
 
+source("R/preparation_helper_functions.R")
 
 pheno <- readRDS("outputs/pheno.Rds")
 
@@ -86,6 +87,9 @@ for (col_ix in 2:ncol(geno)) {
 
 geno_all <- geno_compound[na.exclude(match(pheno$animal_id, geno_compound$individual)),]
 
+saveRDS(geno_all,
+        file = "outputs/geno_all.Rds")
+
 
 ## Subset genotypes based on pen/cage
 
@@ -159,19 +163,6 @@ traits <- c("load_N", "weight", "comb_g",
 
 
 ## Create fam files
-
-fam <- function(df, trait) data.frame(fid = df$animal_id,
-                                      iid = df$animal_id,
-                                      father = 0,
-                                      mother = 0,
-                                      sex = 2,
-                                      as.data.frame(df[, trait]))
-
-write_plink <- function(x, filename) write.table(x,
-                                                 file = filename,
-                                                 quote = FALSE,
-                                                 row.names = FALSE,
-                                                 col.names = FALSE)
 
 
 for (trait_ix in 1:length(traits)) {
