@@ -1,7 +1,7 @@
 
 ## Read suggestive GWAS hits and make graphs
 
-
+library(biomaRt)
 library(dplyr)
 library(GenomicRanges)
 library(readr)
@@ -10,6 +10,7 @@ library(readr)
 gwas <- readRDS("outputs/gwas.Rds")
 
 
+significant <- filter(gwas, p_wald < 5e-8)
 suggestive <- filter(gwas, p_wald < 1e-4)
 
 
@@ -48,13 +49,14 @@ print(subsetByOverlaps(marker_ranges, cage_regions))
 
 ## Body weight overlaps
 
-
 bw_regions <- reduce_region(filter(suggestive, scan_name_without_group == "weight"))
 
 print(as.data.frame(subsetByOverlaps(marker_ranges, bw_regions)))
 
 ## Not much
 
+
+bw_significant_regions <- reduce_region(filter(significant, scan_name_without_group == "weight"))
 
 
 
@@ -78,3 +80,31 @@ suggestive_reduced_pretty_names <-
 
 write_csv(suggestive_reduced_pretty_names[, c(5, 2:4)],
           "tables/supplementary_table_all_regions.csv")
+
+
+
+## Genes close to body weight regions
+
+ensembl <- useMart("ensembl",
+                   dataset = "ggallus_gene_ensembl")
+
+get_region_genes <- function(regions) {
+
+    getBM(attributes = c("ensembl_gene_id", "gene_biotype", "external_gene_name", "description"), 
+          filters = "chromosomal_region",
+          values = paste(seqnames(regions), ":",
+                         start(regions), ":",
+                         end(regions)),
+          mart = ensembl)
+
+}
+
+
+region_genes <- vector(mode = "list",
+                       length = length(bw_significant_regions))
+
+for (region_ix in 1:length(bw_significant_regions)) {
+
+    region_genes[[region_ix]] <- get_region_genes(bw_significant_regions[region_ix])
+
+}
