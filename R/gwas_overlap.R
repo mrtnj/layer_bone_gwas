@@ -100,11 +100,68 @@ get_region_genes <- function(regions) {
 }
 
 
-region_genes <- vector(mode = "list",
-                       length = length(bw_significant_regions))
+## region_genes <- vector(mode = "list",
+##                       length = length(bw_significant_regions))
 
-for (region_ix in 1:length(bw_significant_regions)) {
+##for (region_ix in 1:length(bw_significant_regions)) {
 
-    region_genes[[region_ix]] <- get_region_genes(bw_significant_regions[region_ix])
+##    region_genes[[region_ix]] <- get_region_genes(bw_significant_regions[region_ix])
 
-}
+##}
+
+##saveRDS(region_genes, "outputs/region_genes_bw.Rds")
+
+region_genes <- readRDS("outputs/region_genes_bw.Rds")
+
+
+
+## Animal QTLdb
+
+qtl <- read_tsv("annotation/chickenqtldb2020-06_16.txt",
+                col_names = FALSE,
+                na = ".",
+                comment = "#")
+
+qtl$trait <- str_match(qtl$X9,
+                       "Name=([^;]+);")[,2]
+qtl$pmid <- str_match(qtl$X9,
+                      "PUBMED_ID=([^;]+);")[,2]
+qtl$markers <- str_match(qtl$X9,
+                         "FlankMarker=([^;]+);")[,2]
+
+qtl <- filter(qtl, grepl("Body weight", qtl$trait))
+
+markers_split <- strsplit(qtl$markers, split = ",")
+
+qtl$marker1 <- unlist(lapply(markers_split, "[", 1))
+qtl$marker2 <- unlist(lapply(markers_split, "[", 2))
+
+qtl$marker2 <- ifelse(is.na(qtl$marker2),
+                      qtl$marker1,
+                      qtl$marker2)
+
+qtl$chr <- sub(qtl$X1,
+               pattern = "Chr.",
+               replacement = "")
+
+
+variation <- read_tsv("annotation/gallus_gallus.gvf",
+                      col_names = FALSE,
+                      comment = "#")
+variation <- filter(variation, X1 %in% c(4, 6, 27))
+
+variation$id <- str_match(variation$X9, "Dbxref=dbSNP_150:([^;]+);")[,2]
+
+variant_position <- variation[, c("id", "X4")]
+colnames(variant_position) <- c("marker", "pos")
+
+
+qtl <- inner_join(qtl, variant_position, by = c("marker1" = "marker"))
+qtl <- inner_join(qtl, variant_position, by = c("marker2" = "marker"))
+
+
+qtl_ranges <- GRanges(seqnames = qtl$chr,
+                      ranges = IRanges(qtl$pos.x, qtl$pos.y))
+
+
+qtldb_bw_overlap <- qtl[queryHits(findOverlaps(qtl_ranges, bw_significant_regions)),]
