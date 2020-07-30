@@ -2,9 +2,10 @@
 ## Models and plots of content, density and composition phenotypes
 
 library(ggplot2)
-library(lme4)
+library(multcomp)
 library(tidyr)
 library(patchwork)
+library(readr)
 
 pheno <- readRDS("outputs/pheno.Rds")
 
@@ -279,14 +280,76 @@ dev.off()
 ## Figure of differences between systems and association with load
 
 
-tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, tga_ix)],
-                               -c(animal_id, cage.pen, breed),
+tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, 7, tga_ix)],
+                               -c(animal_id, cage.pen, breed, weight),
                                names_to = "variable")
 
-models_tga <- model_breed_cagepen(tga_pheno_long)
+
+model_breed_cagepen <- function(long) {
+    
+    long_split <- split(long, long$variable)
+    
+    models <- lapply(long_split,
+                     function(x) {
+                         lm(value ~ breed * cage.pen, data = x)
+                     })
+    
+    levels <- expand.grid(cage.pen = c("CAGE", "PEN"),
+                          breed = c("LSL", "Bovans"),
+                          stringsAsFactors = FALSE)
+    
+    ## Get fits for cells
+    
+    fit <- lapply(models,
+                  predict,
+                  newdata = levels,
+                  interval = "confidence")
+    
+    fit_levels <- lapply(fit, cbind, levels)
+    
+    fits <- Reduce(rbind, fit_levels)
+    fits$variable <- rep(names(fit), each = nrow(levels))
+    
+    
+    ## Get comparisons
+    
+    coef <- lapply(models,
+                   tidy,
+                   conf.int = TRUE)
+    
+    coefs <- Reduce(rbind, coef)
+    coefs$variable <- rep(names(coef), each = nrow(coef[[1]]))
+    
+    
+    ## Get contrasts
+    cage_minus_pen_within_bovan <- matrix(c(0, 0, -1, 0), 1)
+    cage_minus_pen_within_lsl <- matrix(c(0, 0, -1, -1), 1)
+    
+    contr <- lapply(models, function(model) {
+        bovan_contrast <- tidy(confint(glht(model, cage_minus_pen_within_bovan)))
+        lsl_contrast <- tidy(confint(glht(model, cage_minus_pen_within_lsl)))
+        
+        rbind(transform(bovan_contrast, contrast = "within Bovans"),
+              transform(lsl_contrast, contrast = "within LSL"))
+        })
+    
+    contr_df <- Reduce(rbind, contr)
+    contr_df$variable <- rep(names(contr), each = nrow(contr[[1]]))
+    
+    list(models = models,
+         fits = fits,
+         coefs = coefs,
+         contr = contr_df)
+}
+
+
+
+
+models_tga <- model_breed_cagepen_bw(tga_pheno_long)
 
 fits_tga <- models_tga$fits
 coefs_tga <- models_tga$coefs
+contr_tga <- models_tga$contr
 
 coefs_tga$Term <- ""
 coefs_tga$Term[coefs_load$term == "breedLSL"] <- "Bovans vs LSL"
@@ -348,6 +411,23 @@ plot_tga_coef <- qplot(x = Term,
     xlab("") +
     ylab("") 
 
+
+plot_tga_contr <- qplot(x = contrast,
+                        y = estimate,
+                        ymin = conf.low,
+                        ymax = conf.high,
+                        geom = "pointrange",
+                        data = contr_tga) +
+    facet_wrap(~ variable, scale = "free", ncol = 2) +
+    geom_hline(yintercept = 0,
+               colour = "red",
+               linetype = 2) +
+    coord_flip() +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank()) +
+    xlab("") +
+    ylab("") 
 
 pdf("figures/plot_tga_pheno.pdf")
 print(plot_tga_pheno)
