@@ -1,10 +1,14 @@
 
 ## Models and plots of content, density and composition phenotypes
 
+library(broom)
+library(dplyr)
+library(egg)
 library(ggplot2)
 library(multcomp)
 library(tidyr)
 library(patchwork)
+library(purrr)
 library(readr)
 
 pheno <- readRDS("outputs/pheno.Rds")
@@ -280,8 +284,8 @@ dev.off()
 ## Figure of differences between systems and association with load
 
 
-tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, 7, tga_ix)],
-                               -c(animal_id, cage.pen, breed, weight),
+tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, tga_ix)],
+                               -c(animal_id, cage.pen, breed),
                                names_to = "variable")
 
 
@@ -345,16 +349,16 @@ model_breed_cagepen <- function(long) {
 
 
 
-models_tga <- model_breed_cagepen_bw(tga_pheno_long)
+models_tga <- model_breed_cagepen(tga_pheno_long)
 
 fits_tga <- models_tga$fits
 coefs_tga <- models_tga$coefs
 contr_tga <- models_tga$contr
-
+    
 coefs_tga$Term <- ""
-coefs_tga$Term[coefs_load$term == "breedLSL"] <- "Bovans vs LSL"
-coefs_tga$Term[coefs_load$term == "cage.penPEN"] <- "CAGE vs PEN"
-coefs_tga$Term[coefs_load$term == "breedLSL:cage.penPEN"] <- "Interaction"
+coefs_tga$Term[coefs_tga$term == "breedLSL"] <- "Bovans vs LSL"
+coefs_tga$Term[coefs_tga$term == "cage.penPEN"] <- "CAGE vs PEN"
+coefs_tga$Term[coefs_tga$term == "breedLSL:cage.penPEN"] <- "Interaction"
 
 coefs_tga <- inner_join(coefs_tga, pretty_tga_trait_names,
                         by = c("variable" = "name"))
@@ -370,6 +374,13 @@ tga_pheno_long_pretty <- inner_join(tga_pheno_long, pretty_tga_trait_names,
                                     by = c("variable" = "name"))
 tga_pheno_long_pretty$pretty_name <- factor(tga_pheno_long_pretty$pretty_name,
                                             levels = pretty_tga_trait_names$pretty_name[order(pretty_tga_trait_names$name)])
+
+
+tga_contr_pretty <- inner_join(contr_tga, pretty_tga_trait_names,
+                               by = c("variable" = "name"))
+tga_contr_pretty$pretty_name <- factor(tga_contr_pretty$pretty_name,
+                                            levels = pretty_tga_trait_names$pretty_name[order(pretty_tga_trait_names$name)])
+
 
 plot_tga_pheno <- ggplot() +
     geom_jitter(aes(colour = breed,
@@ -417,8 +428,8 @@ plot_tga_contr <- qplot(x = contrast,
                         ymin = conf.low,
                         ymax = conf.high,
                         geom = "pointrange",
-                        data = contr_tga) +
-    facet_wrap(~ variable, scale = "free", ncol = 2) +
+                        data = tga_contr_pretty) +
+    facet_wrap(~ pretty_name, scale = "free", ncol = 2) +
     geom_hline(yintercept = 0,
                colour = "red",
                linetype = 2) +
@@ -433,8 +444,73 @@ pdf("figures/plot_tga_pheno.pdf")
 print(plot_tga_pheno)
 dev.off()
 
-pdf("figures/plot_tga_coefs.pdf")
+pdf("figures/plot_tga_coef.pdf")
 print(plot_tga_coef)
 dev.off()
 
+pdf("figures/plot_tga_contr.pdf")
+print(plot_tga_contr)
+dev.off()
 
+
+
+
+## Combined correlation heatmap
+
+pheno_split <- split(pheno[,c(2, 7, ct_ix, tga_ix)], pheno$cage.pen)
+cor_split <- lapply(pheno_split, cor, use = "p")
+
+cor_split_df <- lapply(cor_split, function(cors) {
+    cors <- data.frame(cors)
+    cors$variable1 <- rownames(cors)
+    cors
+})
+cor_split_long <- map_dfr(cor_split_df,
+                          pivot_longer,
+                          cols = -variable1,
+                          .id = "cage.pen",
+                          names_to = "variable2")
+
+
+pretty_trait_names <- rbind(pretty_ct_trait_names,
+                            pretty_tga_trait_names,
+                            data.frame(name = c("weight", "load_N"),
+                                       pretty_name = c("body weight", "bone breaking strength"),
+                                       stringsAsFactors = FALSE))
+cor_split_long <- inner_join(cor_split_long,
+                             pretty_trait_names,
+                             by = c("variable1" = "name"))
+
+cor_split_long <- inner_join(cor_split_long,
+                             pretty_trait_names,
+                             by = c("variable2" = "name"))
+
+colnames(cor_split_long)[5:6] <- c("variable1_pretty", "variable2_pretty")
+
+cor_split_long$variable1_pretty <- factor(cor_split_long$variable1_pretty,
+                                         levels = pretty_trait_names$pretty_name)
+
+cor_split_long$variable2_pretty <- factor(cor_split_long$variable2_pretty,
+                                          levels = pretty_trait_names$pretty_name)
+
+
+
+plot_pqct_tga_split_heatmap <- ggplot() +
+    geom_tile(aes(x = variable1_pretty,
+                  y = variable2_pretty,
+                  fill = value),
+              data = cor_split_long) +
+    facet_wrap(~ cage.pen, ncol = 1) +
+    scale_fill_gradient2(limits = c(-1, 1),
+                         name = "Correlation") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid = element_blank(),
+          strip.background = element_blank()) +
+    ggtitle("Correlations between bone phenotypes") +
+    xlab("") +
+    ylab("")
+
+
+pdf("figures/plot_bone_heatmap.pdf", width = 8, height = 10)
+print(plot_pqct_tga_split_heatmap)
+dev.off()
