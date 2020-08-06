@@ -12,28 +12,31 @@ library(tidyr)
 source("R/gwas_helper_functions.R")
 source("R/simulation_helper_functions.R")
 
-files_joint_shared <- paste("simulations/shared/output/shared", 1:10,
+n_rep <- 50
+
+files_joint_shared <- paste("simulations/shared/output/shared", 1:n_rep,
                             "_joint.assoc.txt", sep = "")
-files_e1_shared <- paste("simulations/shared/output/shared", 1:10,
+files_e1_shared <- paste("simulations/shared/output/shared", 1:n_rep,
                          "_e1.assoc.txt", sep = "")
-files_e2_shared <- paste("simulations/shared/output/shared", 1:10,
+files_e2_shared <- paste("simulations/shared/output/shared", 1:n_rep,
                          "_e2.assoc.txt", sep = "")
-files_qtl_shared <- paste("simulations/shared/shared", 1:10,
+files_qtl_shared <- paste("simulations/shared/shared", 1:n_rep,
                           "_qtl.txt", sep = "")
 
-files_joint_gxe <- paste("simulations/gxe/output/gxe", 1:10,
+files_joint_gxe <- paste("simulations/gxe/output/gxe", 1:n_rep,
                          "_joint.assoc.txt", sep = "")
-files_e1_gxe <- paste("simulations/gxe/output/gxe", 1:10,
+files_e1_gxe <- paste("simulations/gxe/output/gxe", 1:n_rep,
                       "_e1.assoc.txt", sep = "")
-files_e2_gxe <- paste("simulations/gxe/output/gxe", 1:10,
+files_e2_gxe <- paste("simulations/gxe/output/gxe", 1:n_rep,
                       "_e2.assoc.txt", sep = "")
-files_qtl_gxe <- paste("simulations/gxe/gxe", 1:10,
+files_qtl_gxe <- paste("simulations/gxe/gxe", 1:n_rep,
                        "_qtl.txt", sep = "")
 
 
 summarise_results <- function(files_joint,
                               files_e1,
-                              files_e2) {
+                              files_e2,
+                              files_qtl) {
 
     n_rep <- length(files_joint)
     
@@ -158,8 +161,52 @@ summarise_results <- function(files_joint,
 
 results_shared <- summarise_results(files_joint_shared,
                                     files_e1_shared,
-                                    files_e2_shared)
+                                    files_e2_shared,
+                                    files_qtl_shared)
 
 results_gxe <- summarise_results(files_joint_gxe,
                                  files_e1_gxe,
-                                 files_e2_gxe)
+                                 files_e2_gxe,
+                                 files_qtl_gxe)
+
+shared_power1 <- sum(results_shared$detected_qtl$percent_variance_explained > 1 &
+                         results_shared$detected_qtl$detected_joint) /
+    sum(results_shared$detected_qtl$percent_variance_explained > 1)
+
+shared_power1_e1 <- sum(results_shared$detected_qtl$percent_variance_explained > 1 &
+                         results_shared$detected_qtl$detected_e1) /
+    sum(results_shared$detected_qtl$percent_variance_explained > 1)
+
+gxe_power1_e1 <- sum(results_gxe$detected_qtl$percent_variance_explained1 > 1 &
+                       results_gxe$detected_qtl$detected_e1) /
+    sum(results_gxe$detected_qtl$percent_variance_explained1 > 1)
+
+gxe_power1_e2 <- sum(results_gxe$detected_qtl$percent_variance_explained2 > 1 &
+                         results_gxe$detected_qtl$detected_e2) /
+    sum(results_gxe$detected_qtl$percent_variance_explained2 > 1)
+
+
+
+plot_power_shared <- qplot(x = percent_variance_explained,
+                           fill = detected_joint,
+                           data = results_shared$detected_qtl) +
+    annotate("text",
+             label = paste("Power for loci > 1%: ", signif(shared_power1, 2)),
+             x = 20, y = 175)
+
+
+
+plot_power_gxe1 <- qplot(x = percent_variance_explained1,
+                         fill = detected_e1,
+                         data = results_gxe$detected_qtl) +
+    annotate("text",
+             label = paste("Power for loci > 1%: ", signif(gxe_power1_e1, 2)),
+             x = 20, y = 175)
+
+plot_power_gxe2 <- qplot(x = percent_variance_explained2,
+                         fill = detected_e2,
+                         data = results_gxe$detected_qtl) +
+    annotate("text",
+             label = paste("Power for loci > 1%: ", signif(gxe_power1_e2, 2)),
+             x = 20, y = 175)
+
