@@ -5,11 +5,12 @@ library(broom)
 library(dplyr)
 library(egg)
 library(ggplot2)
-library(multcomp)
 library(tidyr)
 library(patchwork)
 library(purrr)
 library(readr)
+
+source("R/trait_modelling_functions.R")
 
 pheno <- readRDS("outputs/pheno.Rds")
 
@@ -281,72 +282,54 @@ print(plot_tga_heatmap_pc_combined)
 dev.off()
 
 
-## Figure of differences between systems and association with load
+## Differences between systems: CT PCs
 
+
+ct_model_data_long <- pivot_longer(ct_pca_data[, c("animal_id",
+                                                   "cage.pen",
+                                                   "breed",
+                                                   "PC1",
+                                                   "PC2",
+                                                   "PC3")],
+                                   -c(animal_id, cage.pen, breed),
+                                   names_to = "variable")
+                                   
+
+
+models_ct <- model_breed_cagepen(ct_model_data_long)
+
+contr_ct <- models_ct$contr
+
+contr_ct$pretty_name <- rep(c("pQCT PC1 'high density, thickness, content'",
+                              "pQCT PC2 'long bone length'",
+                              "pQCT PC3 'low cortical density'"),
+                            each = 2)
+
+
+
+plot_ct_contr <- qplot(x = contrast,
+                       y = estimate,
+                       ymin = conf.low,
+                       ymax = conf.high,
+                       geom = "pointrange",
+                       data = contr_ct) +
+    facet_wrap(~ variable, scale = "free", ncol = 1) +
+    geom_hline(yintercept = 0,
+               colour = "red",
+               linetype = 2) +
+    coord_flip() +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank()) +
+    xlab("") +
+    ylab("") 
+
+
+## Figure of differences between systems and association with load
 
 tga_pheno_long <- pivot_longer(tga_pheno[, c(1, 3, 5, tga_ix)],
                                -c(animal_id, cage.pen, breed),
                                names_to = "variable")
-
-
-model_breed_cagepen <- function(long) {
-    
-    long_split <- split(long, long$variable)
-    
-    models <- lapply(long_split,
-                     function(x) {
-                         lm(value ~ breed * cage.pen, data = x)
-                     })
-    
-    levels <- expand.grid(cage.pen = c("CAGE", "PEN"),
-                          breed = c("LSL", "Bovans"),
-                          stringsAsFactors = FALSE)
-    
-    ## Get fits for cells
-    
-    fit <- lapply(models,
-                  predict,
-                  newdata = levels,
-                  interval = "confidence")
-    
-    fit_levels <- lapply(fit, cbind, levels)
-    
-    fits <- Reduce(rbind, fit_levels)
-    fits$variable <- rep(names(fit), each = nrow(levels))
-    
-    
-    ## Get comparisons
-    
-    coef <- lapply(models,
-                   tidy,
-                   conf.int = TRUE)
-    
-    coefs <- Reduce(rbind, coef)
-    coefs$variable <- rep(names(coef), each = nrow(coef[[1]]))
-    
-    
-    ## Get contrasts
-    cage_minus_pen_within_bovan <- matrix(c(0, 0, -1, 0), 1)
-    cage_minus_pen_within_lsl <- matrix(c(0, 0, -1, -1), 1)
-    
-    contr <- lapply(models, function(model) {
-        bovan_contrast <- tidy(confint(glht(model, cage_minus_pen_within_bovan)))
-        lsl_contrast <- tidy(confint(glht(model, cage_minus_pen_within_lsl)))
-        
-        rbind(transform(bovan_contrast, contrast = "within Bovans"),
-              transform(lsl_contrast, contrast = "within LSL"))
-        })
-    
-    contr_df <- Reduce(rbind, contr)
-    contr_df$variable <- rep(names(contr), each = nrow(contr[[1]]))
-    
-    list(models = models,
-         fits = fits,
-         coefs = coefs,
-         contr = contr_df)
-}
-
-
 
 
 models_tga <- model_breed_cagepen(tga_pheno_long)
@@ -428,7 +411,8 @@ plot_tga_contr <- qplot(x = contrast,
                         ymin = conf.low,
                         ymax = conf.high,
                         geom = "pointrange",
-                        data = tga_contr_pretty) +
+                        data = rbind(contr_ct,
+                                     tga_contr_pretty)) +
     facet_wrap(~ pretty_name, scale = "free", ncol = 2) +
     geom_hline(yintercept = 0,
                colour = "red",
@@ -438,7 +422,8 @@ plot_tga_contr <- qplot(x = contrast,
     theme(panel.grid = element_blank(),
           strip.background = element_blank()) +
     xlab("") +
-    ylab("") 
+    ylab("") +
+    ggtitle("Difference between housing systems (cage minus pen)")
 
 pdf("figures/plot_tga_pheno.pdf")
 print(plot_tga_pheno)
@@ -448,9 +433,11 @@ pdf("figures/plot_tga_coef.pdf")
 print(plot_tga_coef)
 dev.off()
 
-pdf("figures/plot_tga_contr.pdf")
+pdf("figures/plot_tga_contr.pdf", width = 8, height = 10)
 print(plot_tga_contr)
 dev.off()
+
+
 
 
 
@@ -477,6 +464,7 @@ pretty_trait_names <- rbind(pretty_ct_trait_names,
                             data.frame(name = c("weight", "load_N"),
                                        pretty_name = c("body weight", "bone breaking strength"),
                                        stringsAsFactors = FALSE))
+
 cor_split_long <- inner_join(cor_split_long,
                              pretty_trait_names,
                              by = c("variable1" = "name"))
