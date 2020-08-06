@@ -5,6 +5,7 @@ library(biomaRt)
 library(dplyr)
 library(GenomicRanges)
 library(readr)
+library(stringr)
 
 
 gwas <- readRDS("outputs/gwas.Rds")
