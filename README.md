@@ -18,7 +18,11 @@ new positions.
 
 * R/plot_genotypes.R -- QC of SNP genotypes
 
-* R/plot_phenotypes.R -- Plots and linear models of phentotypes
+* R/plot_phenotypes.R -- Plots and linear models of bone strenght and body weight
+
+* R/plot_pqct_tga_phenotypes.R -- Plots and linear models of pQCT and TGA phenotypes
+
+* R/trait_modelling_functions.R -- Helper functions
 
 
 ## Format plink files for GEMMA
@@ -37,14 +41,33 @@ to create ped and phenotype files for GEMMA.
 
 * scripts/gemma_gwas.sh -- Run GWAS
 
+
+## GWAS results
+
 * R/gwas_summary.R -- Summarise and visualise results
 
-* R/gwas_overlap.R -- Investigate overlaps between GWAS for different traits
+* R/gwas_overlap.R -- Investigate overlaps between GWAS for different traits and genes
+
+
+## Conditional GWAS on the body mass loci on chr4
+
+* R/prepare_conditional_gwas.R -- Make covariate files for conditional GWAS
+
+* scripts/conditional_gwas.sh -- Run conditional GWAS
+
+* R/conditional_gwas_summary.R -- Summarise results of conditional GWAS
+
+
+## Soundness check of body weight covariate for GWAS
+
+* script/unadjusted_load_gwas.sh -- Run the breaking strength GWAS without body weight covarite, to check if this does indeed detect he body weight loci
+
+* R/unadjusted_load_gwas_summary.R -- Summarise results of soundness check
 
 
 ## Run GCTA for genomic correlations
 
-* scripts/genomic_correlation_gcta.sh
+* scripts/genomic_correlation_gcta.sh -- Run bivariate genomic model with GCTA
 
 
 ## Simulations
@@ -58,5 +81,3 @@ to create ped and phenotype files for GEMMA.
 * scripts/simulated_gwas_gxe.sh -- Run GWAS on simulated data with GxE
 
 * R/simulation_results.R -- Summarise results
-
-* R/simulation_results_gxe.R -- Summarise results with GxE
