@@ -11,52 +11,89 @@ library(readr)
 source("R/hglm_helper_functions.R")
 
 
-pen_load <- read_delim("gwas/pen_load_N/pen_load_N.fam", col_names = FALSE, delim = " ")
+## Get data
 
-pen_missing <- is.na(pen_load$X6)
+pen_load <- read_data("gwas/pen_load_N/pen_load_N.fam")
+cage_load <- read_data("gwas/cage_load_N/cage_load_N.fam")
+all_load <- read_data("gwas/all_load_N/all_load_N.fam")
 
-pen_load <- pen_load[!pen_missing,]
-
-
-all_load <- read_delim("gwas/all_load_N/all_load_N.fam", col_names = FALSE, delim = " ")
-
-all_missing <- is.na(all_load$X6)
-
-all_load <- all_load[!all_missing,]
+pen_weight <- read_data("gwas/pen_weight/pen_weight.fam")
+cage_weight <- read_data("gwas/cage_weight/cage_weight.fam")
+all_weight <- read_data("gwas/all_weight/all_weight.fam")
 
 
 ## Load GRM from Gemma and decompose
 
 pen_GRM <- read_tsv("gwas/output/pen_grm.sXX.txt", col_names = FALSE)
-
+cage_GRM <- read_tsv("gwas/output/cage_grm.sXX.txt", col_names = FALSE)
 all_GRM <- read_tsv("gwas/output/all_grm.sXX.txt", col_names = FALSE)
 
-Z_grm_pen <- decompose_grm(pen_GRM,
-                           pen_missing)
+Z_grm_pen_load <- decompose_grm(pen_GRM,
+                                pen_load$missing)
 
-Z_grm_all <- decompose_grm(all_GRM,
-                           all_missing)
+Z_grm_cage_load <- decompose_grm(cage_GRM,
+                                 cage_load$missing)
+
+Z_grm_all_load <- decompose_grm(all_GRM,
+                                all_load$missing)
 
 
-## Get group data
+Z_grm_pen_weight <- decompose_grm(pen_GRM,
+                                  pen_weight$missing)
+
+Z_grm_cage_weight <- decompose_grm(cage_GRM,
+                                   cage_weight$missing)
+
+Z_grm_all_weight <- decompose_grm(all_GRM,
+                                  all_weight$missing)
+
+
+
+
+## Group covariate and incidence matrix
 
 pheno <- readRDS("outputs/pheno.Rds")
 
-pen_covar <- get_covar(pheno,
-                       pen_load)
+pen_load_covar <- get_covar(pheno,
+                            pen_load$data,
+                            "load_N")
 
-all_covar <- get_covar(pheno,
-                       all_load)
+cage_load_covar <- get_covar(pheno,
+                            cage_load$data,
+                            "load_N")
 
-all_covar$group_cages_combined <- ifelse(all_covar$group > 2000,
-                                         2000,
-                                         all_covar$group)
+all_load_covar <- get_covar(pheno,
+                            all_load$data,
+                            "load_N")
 
-Z_pen_group <- model.matrix(~ factor(group), pen_covar)
 
-Z_all_group <- model.matrix(~ factor(group), all_covar)
+pen_weight_covar <- get_covar(pheno,
+                              pen_weight$data,
+                              "weight")
 
-Z_all_group_cages_combined <- model.matrix(~ factor(group_cages_combined), all_covar)
+cage_weight_covar <- get_covar(pheno,
+                               cage_weight$data,
+                               "weight")
+
+all_weight_covar <- get_covar(pheno,
+                              all_weight$data,
+                              "weight")
+
+all_load_covar$group_cages_combined <- ifelse(all_load_covar$group > 2000,
+                                              2000,
+                                              all_load_covar$group)
+
+all_weight_covar$group_cages_combined <- ifelse(all_weight_covar$group > 2000,
+                                                2000,
+                                                all_weight_covar$group)
+
+Z_pen_load_group <- model.matrix(~ factor(group), pen_load_covar)
+
+Z_all_load_group <- model.matrix(~ factor(group_cages_combined), all_load_covar)
+
+Z_pen_weight_group <- model.matrix(~ factor(group), pen_weight_covar)
+
+Z_all_weight_group <- model.matrix(~ factor(group_cages_combined), all_weight_covar)
 
 
 
@@ -65,105 +102,97 @@ Z_all_group_cages_combined <- model.matrix(~ factor(group_cages_combined), all_c
 geno_pen <- read_delim("gwas/pen.raw",
                        delim = " ")
 
-geno_pen <- geno_pen[!pen_missing,]
+geno_pen_load <- geno_pen[match(pen_load$data$X1, geno_pen$FID),]
+assert_that(identical(geno_pen_load$FID, pen_load$data$X1))
 
-assert_that(identical(geno_pen$FID, pen_load$X1))
+geno_pen_weight <- geno_pen[match(pen_weight$data$X1, geno_pen$FID),]
+assert_that(identical(geno_pen_weight$FID, pen_weight$data$X1))
+
+
+geno_cage <- read_delim("gwas/cage.raw",
+                        delim = " ")
+
+geno_cage_load <- geno_cage[match(cage_load$data$X1, geno_cage$FID),]
+assert_that(identical(geno_cage_load$FID, cage_load$data$X1))
+
+geno_cage_weight <- geno_cage[match(cage_weight$data$X1, geno_cage$FID),]
+assert_that(identical(geno_cage_weight$FID, cage_weight$data$X1))
+
 
 geno_all <- read_delim("gwas/all.raw",
                        delim = " ")
 
-geno_all <- geno_all[!all_missing,]
+geno_all_load <- geno_all[match(all_load$data$X1, geno_all$FID),]
+assert_that(identical(geno_all_load$FID, all_load$data$X1))
 
-assert_that(identical(geno_all$FID, all_load$X1))
-
-snps_pruned_pen <- prune_snp_matrix(geno_pen)
-snps_pruned_all <- prune_snp_matrix(geno_all)
-
-
-## Run GWAS
-
-run_gwas <- function(pheno,
-                     X,
-                     Z,
-                     RandC,
-                     snp_matrix) {
-    
-    n_ind <- length(pheno)
-    n_snp <- ncol(snp_matrix)
-
-    ## Fit baseline model
-
-    model_baseline <- hglm(y = pheno,
-                         X = X,
-                         Z = Z,
-                         RandC = RandC,
-                         X.disp = X.disp)
-
-    
-    ratio <- model_baseline$varRanef/model_pen_random$varFix
-
-    V <- RepeatABEL::constructV(Z,
-                                RandC,
-                                ratio)
-
-    eigV <- eigen(V)
-
-    transformation_matrix <- diag(1/sqrt(eigV$values)) %*% t(eigV$vectors)
-    
-    transformed_y <- transformation_matrix %*% pheno
-    transformed_X <- transformation_matrix %*% X
+geno_all_weight <- geno_all[match(all_weight$data$X1, geno_all$FID),]
+assert_that(identical(geno_all_weight$FID, all_weight$data$X1))
 
 
-    ## Null model
-    
-    qr0 <- qr(transformed_X)
-    
-    est0 <- qr.coef(qr0, transformed_y)
+snps_pruned_pen_load <- prune_snp_matrix(geno_pen_load)
+snps_pruned_pen_weight <- prune_snp_matrix(geno_pen_weight)
 
-    null_residual <- transformed_y - transformed_X %*% est0
+snps_pruned_cage_load <- prune_snp_matrix(geno_cage_load)
+snps_pruned_cage_weight <- prune_snp_matrix(geno_cage_weight)
 
-    RSS_null <- sum(null_residual^2)/n_ind
+snps_pruned_all_load <- prune_snp_matrix(geno_all_load)
+snps_pruned_all_weight <- prune_snp_matrix(geno_all_weight)
 
 
-    ## SNP models
-    
-    estimates <- numeric(n_snp)
-    LRT <- numeric(n_snp)
-    p <- numeric(n_snp)
+gwas_pen_load <- run_gwas(pen_load$data$X6,
+                          model.matrix(~ 1 + weight + breed, pen_load_covar),
+                          cbind(Z_grm_pen_load, Z_pen_load_group),
+                          c(ncol(Z_grm_pen_load), ncol(Z_pen_load_group)),
+                          snps_pruned_pen_load)
 
-    for (snp_ix in 1:n_snp) {
-        
-        transformed_snp <- transformation_matrix %*% as.matrix(snp_matrix[, snp_ix])
-        
-        X1 <- cbind(transformed_snp, transformed_X)
-        qr1 <- qr(X1)
-        est1 <- qr.coef(qr1, transformed_y)
-        residual1 <- transformed_y - X1 %*% est1
-        RSS1 <- sum(residual1^2)/n_ind
-        
-        estimates[snp_ix] <- est1[1]
-        LRT[snp_ix] <- -n_ind * (log(RSS1) - log(RSS_null))
-        p[snp_ix] <- 1 - pchisq(LRT[snp_ix],
-                                df = 1)
-    }
-    
-    data.frame(marker_id = colnames(snp_matrix),
-               estimates,
-               LRT,
-               p)
-}
+saveRDS(gwas_pen_load,
+        file = "gwas/hglm_gwas_pen_load.Rds")
 
-gwas_pen_random <- run_gwas(pen_load$X6,
-                            model.matrix(~ 1 + weight, pen_covar),
-                            cbind(Z_grm_pen, Z_pen_group),
-                            c(ncol(Z_grm_pen), ncol(Z_pen_group)),
-                            snps_pruned_pen)
+
+gwas_cage_load <- run_gwas(cage_load$data$X6,
+                          model.matrix(~ 1 + weight + breed, cage_load_covar),
+                          Z_grm_cage_load,
+                          ncol(Z_grm_cage_load),
+                          snps_pruned_cage_load)
+
+saveRDS(gwas_cage_load,
+        file = "gwas/hglm_gwas_cage_load.Rds")
+
+
+gwas_all_load <- run_gwas(all_load$data$X6,
+                          model.matrix(~ 1 + weight + breed + cage.pen, all_load_covar),
+                          cbind(Z_grm_all_load, Z_all_load_group),
+                          c(ncol(Z_grm_all_load), ncol(Z_all_load_group)),
+                          snps_pruned_all_load)
+
+saveRDS(gwas_all_load,
+        file = "gwas/hglm_gwas_all_load.Rds")
 
 
 
-gwas_all_random <- run_gwas(all_load$X6,
-                            model.matrix(~ 1 + weight + cage.pen, all_covar),
-                            cbind(Z_grm_all, Z_all_group),
-                            c(ncol(Z_grm_all), ncol(Z_all_group)),
-                            snps_pruned_all)
+gwas_pen_weight <- run_gwas(pen_weight$data$X6,
+                            model.matrix(~ 1 + breed, pen_weight_covar),
+                            cbind(Z_grm_pen_weight, Z_pen_weight_group),
+                            c(ncol(Z_grm_pen_weight), ncol(Z_pen_weight_group)),
+                            snps_pruned_pen_weight)
 
+saveRDS(gwas_pen_weight,
+        file = "gwas/hglm_gwas_pen_weight.Rds")
+
+gwas_cage_weight <- run_gwas(cage_weight$data$X6,
+                             model.matrix(~ 1 + breed, cage_weight_covar),
+                             Z_grm_cage_weight,
+                             ncol(Z_grm_cage_weight),
+                             snps_pruned_cage_weight)
+
+saveRDS(gwas_cage_weight,
+        file = "gwas/hglm_gwas_cage_weight.Rds")
+
+gwas_all_weight <- run_gwas(all_weight$data$X6,
+                            model.matrix(~ 1 + breed + cage.pen, all_weight_covar),
+                            cbind(Z_grm_all_weight, Z_all_weight_group),
+                            c(ncol(Z_grm_all_weight), ncol(Z_all_weight_group)),
+                            snps_pruned_all_weight)
+
+saveRDS(gwas_all_weight,
+        file = "gwas/hglm_gwas_all_weight.Rds")
