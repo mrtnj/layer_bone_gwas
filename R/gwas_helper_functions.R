@@ -26,10 +26,15 @@ plot_qq_raster <- function(p) {
 }
 
 
-plot_manhattan <- function(data) {
+plot_manhattan <- function(data,
+                           p = "p_wald") {
     chr_numbers <- as.numeric(factor(data$chr,
                                      levels = unique(data$chr)))
     data$chr_indicator <- factor(chr_numbers %% 2)
+    
+    if (p != "p_wald") {
+        data$p_wald <- as.data.frame(data)[, p]
+    }
 
     qplot(x = global_pos,
           y = -log10(p_wald),
