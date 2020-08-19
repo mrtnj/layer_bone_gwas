@@ -5,6 +5,7 @@ library(ggplot2)
 library(patchwork)
 library(readr)
 library(stringr)
+library(tidyr)
 
 source("R/gwas_helper_functions.R")
 
@@ -198,4 +199,92 @@ plot_conditional <- qplot(x = ps/1e6, y = -log10(p),
                           data = combined_conditional) +
     formatting +
     ggtitle("Conditional GWAS of body weight on chromosome 4")
+
+
+pdf("figures/plot_qq_hglm.pdf")
+print(plot_qq_combined)
+dev.off()
+
+
+## Comparison of systems
+
+gwas_load_systems <- rbind(transform(gwas_pen_load,
+                                     scan_name = "pen"),
+                           transform(gwas_cage_load,
+                                     scan_name = "cage"))
+
+load_comparison <- pivot_wider(gwas_load_systems[, c("marker_id", "ps", "p", "estimates", "scan_name")],
+                               values_from = c("estimates", "p"),
+                               names_from = "scan_name")
+
+
+gwas_weight_systems <- rbind(transform(gwas_pen_weight,
+                                       scan_name = "pen"),
+                             transform(gwas_cage_weight,
+                                       scan_name = "cage"))
+
+weight_comparison <- pivot_wider(gwas_weight_systems[, c("marker_id", "ps", "p", "estimates", "scan_name")],
+                               values_from = c("estimates", "p"),
+                               names_from = "scan_name")
+
+formatting_comparison <- list(theme_bw(),
+                              theme(panel.grid = element_blank()),
+                              xlab("CAGE"),
+                              ylab("PEN"))
+
+
+plot_load_comparison_p <- qplot(x = -log10(p_cage),
+                                y = -log10(p_pen),
+                                data = filter(load_comparison,
+                                              p_cage < 1e-3 |
+                                                  p_pen < 1e-3)) +
+    ggtitle("Bone strength \nNegative logarithm of p-value") +
+    formatting_comparison +
+    xlim(0, 10) +
+    ylim(0, 10)
+
+plot_load_comparison_beta <- qplot(x = estimates_cage,
+                                   y = estimates_pen,
+                                   data = filter(load_comparison,
+                                                 p_cage < 1e-3 |
+                                                     p_pen < 1e-3)) +
+    geom_hline(yintercept = 0, colour = "red", linetype = 2) +
+    geom_vline(xintercept = 0, colour = "red", linetype = 2) +
+    ggtitle("Bone strength \nEstimated marker effect") +
+    formatting_comparison
+
+
+plot_weight_comparison_p <- qplot(x = -log10(p_cage),
+                                  y = -log10(p_pen),
+                                  data = filter(weight_comparison,
+                                                p_cage < 1e-3 |
+                                                    p_pen < 1e-3)) +
+    ggtitle("Body weight \nNegative logarithm of p-value") +
+    formatting_comparison +
+    xlim(0, 10) +
+    ylim(0, 10)
+
+plot_weight_comparison_beta <- qplot(x = estimates_cage,
+                                     y = estimates_pen,
+                                     data = filter(weight_comparison,
+                                                   p_cage < 1e-3 |
+                                                       p_pen < 1e-3)) +
+    geom_hline(yintercept = 0, colour = "red", linetype = 2) +
+    geom_vline(xintercept = 0, colour = "red", linetype = 2) +
+    ggtitle("Body weight \nEstimated marker effect") +
+    formatting_comparison
+
+
+
+plot_comparisons <- ggarrange(plot_load_comparison_p,
+                              plot_load_comparison_beta,
+                              plot_weight_comparison_p,
+                              plot_weight_comparison_beta)
+
+
+
+pdf("figures/plot_gwas_comparison_hglm.pdf")
+print(plot_comparisons)
+dev.off()
+
 
