@@ -50,7 +50,9 @@ prune_snp_matrix <- function(snp_matrix) {
  
     missing <- lapply(snp_matrix, function(x) sum(is.na(x)))
     
-    snp_matrix[, missing == 0]
+    genotype_values <- lapply(snp_matrix, function(x) length(unique(x)))
+    
+    snp_matrix[, missing == 0 & genotype_values > 1]
     
 }
 
