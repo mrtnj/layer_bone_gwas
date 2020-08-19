@@ -65,7 +65,7 @@ Z_all_group_cages_combined <- model.matrix(~ factor(group_cages_combined), all_c
 ## Model of pen animals with random pen group
 
 model_pen_random <- hglm(y = pen_load$X6,
-                         X = model.matrix(~ 1 + weight, pen_covar),
+                         X = model.matrix(~ 1 + weight + breed, pen_covar),
                          Z = cbind(Z_grm_pen, Z_pen_group),
                          RandC = c(ncol(Z_grm_pen), ncol(Z_pen_group)))
 
@@ -77,7 +77,7 @@ ratio_group <- get_group_ratio(model_pen_random)
 ## Model of pen animals without random pen group
 
 model_pen_without <- hglm(y = pen_load$X6,
-                          X = model.matrix(~ 1 + weight, pen_covar),
+                          X = model.matrix(~ 1 + weight + breed, pen_covar),
                           Z = Z_grm_pen)
 
 h2_pen_without <- get_h2(model_pen_without)
@@ -86,7 +86,7 @@ h2_pen_without <- get_h2(model_pen_without)
 ## All animals with random pen/cage group
 
 model_all_random <- hglm(y = all_load$X6,
-                         X = model.matrix(~ 1 + weight + cage.pen, all_covar),
+                         X = model.matrix(~ 1 + weight + cage.pen + breed, all_covar),
                          Z = cbind(Z_grm_all, Z_all_group),
                          RandC = c(ncol(Z_grm_all), ncol(Z_all_group)))
 
@@ -98,7 +98,7 @@ ratio_group_all_random <- get_group_ratio(model_all_random)
 ## All animals with random pen group, cages combined into one group;
 
 model_all_random_cages_combined <- hglm(y = all_load$X6,
-                                        X = model.matrix(~ 1 + weight + cage.pen, all_covar),
+                                        X = model.matrix(~ 1 + weight + cage.pen + breed, all_covar),
                                         Z = cbind(Z_grm_all, Z_all_group_cages_combined),
                                         RandC = c(ncol(Z_grm_all), ncol(Z_all_group_cages_combined)))
 
@@ -110,7 +110,7 @@ ratio_group_all_random_cages_combined <- get_group_ratio(model_all_random_cages_
 ## All animals without random pen/cage group
 
 model_all_without <- hglm(y = all_load$X6,
-                          X = model.matrix(~ 1 + weight + cage.pen, all_covar),
+                          X = model.matrix(~ 1 + weight + cage.pen + breed, all_covar),
                           Z = Z_grm_all)
 
 h2_all_without <- get_h2(model_all_without)
@@ -121,7 +121,7 @@ h2_all_without <- get_h2(model_all_without)
 
 
 model_all_random_cages_combined_disp <- hglm(y = all_load$X6,
-                                             X = model.matrix(~ 1 + weight + cage.pen, all_covar),
+                                             X = model.matrix(~ 1 + weight + cage.pen + breed, all_covar),
                                              Z = cbind(Z_grm_all, Z_all_group_cages_combined),
                                              RandC = c(ncol(Z_grm_all), ncol(Z_all_group_cages_combined)),
                                              X.disp = model.matrix(~ 1 + cage.pen, all_covar))
@@ -131,6 +131,7 @@ get_group_ratio(model_all_random_cages_combined_disp)
 
 model_all_random_cages_combined$SummVC1
 model_all_random_cages_combined_disp$SummVC1
+
 
 
 
