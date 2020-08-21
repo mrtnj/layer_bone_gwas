@@ -37,11 +37,6 @@ for (snp_ix in 1:n_snps) {
         message("Error in SNP inex", snp_ix)
         message(condition)
         return(NA)
-    },
-    warning = function(condition) {
-        message("Error in SNP inex", snp_ix)
-        message(condition)
-        return(NA)
     })
     
     if (!is.na(model)) {
