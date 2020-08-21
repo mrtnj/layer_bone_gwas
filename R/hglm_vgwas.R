@@ -24,15 +24,35 @@ for (snp_ix in 1:n_snps) {
     X_disp <- cbind(model.matrix(~ cage.pen, all_load_covar),
                     snps_pruned_all_load[, snp_ix])
 
-    model <- hglm(y = all_load$data$X6,
-                  X = model.matrix(~ 1 + weight + breed + cage.pen, all_load_covar),
-                  Z = cbind(Z_grm_all_load, Z_all_load_group),
-                  RandC = c(ncol(Z_grm_all_load), ncol(Z_all_load_group)),
-                  X.disp = X_disp)
+    model <- tryCatch({
+        
+        hglm(y = all_load$data$X6,
+             X = model.matrix(~ 1 + weight + breed + cage.pen, all_load_covar),
+             Z = cbind(Z_grm_all_load, Z_all_load_group),
+             RandC = c(ncol(Z_grm_all_load), ncol(Z_all_load_group)),
+             X.disp = X_disp)
+
+    },
+    error = function(condition) {
+        message("Error in SNP inex", snp_ix)
+        message(condition)
+        return(NA)
+    },
+    warning = function(condition) {
+        message("Error in SNP inex", snp_ix)
+        message(condition)
+        return(NA)
+    })
     
-    marker_id[snp_ix] <- rownames(model$SummVC1)[3]
-    estimate[snp_ix] <- model$SummVC1[3, 1]
-    se[snp_ix] <- model$SummVC1[3, 2]
+    if (!is.na(model)) {
+        marker_id[snp_ix] <- rownames(model$SummVC1)[3]
+        estimate[snp_ix] <- model$SummVC1[3, 1]
+        se[snp_ix] <- model$SummVC1[3, 2]
+    } else {
+        marker_id[snp_ix] <- colnames(snps_pruned_all_load)[snp_ix]
+        estimate[snp_ix] <- NA
+        se[snp_ix] <- NA
+    }
     
 }
 
