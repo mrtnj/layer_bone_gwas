@@ -6,6 +6,7 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(tidyr)
+library(patchwork)
 
 source("R/gwas_helper_functions.R")
 
@@ -201,8 +202,8 @@ plot_conditional <- qplot(x = ps/1e6, y = -log10(p),
     ggtitle("Conditional GWAS of body weight on chromosome 4")
 
 
-pdf("figures/plot_qq_hglm.pdf")
-print(plot_qq_combined)
+pdf("figures/plot_chr4_conditional_hglm.pdf")
+print(plot_conditional)
 dev.off()
 
 
@@ -288,3 +289,123 @@ print(plot_comparisons)
 dev.off()
 
 
+
+
+## Candidate regions
+
+suggestive_pen_load <- filter(gwas_pen_load, p < 1e-4)
+suggestive_cage_load <- filter(gwas_cage_load, p < 1e-4)
+suggestive_all_load <- filter(gwas_all_load, p < 1e-4)
+
+significant_pen_weight <- filter(gwas_pen_weight, p < 5e-8)
+significant_cage_weight <- filter(gwas_cage_weight, p < 5e-8)
+significant_all_weight <- filter(gwas_all_weight, p < 5e-8)
+
+
+
+load_chr4 <- filter(gwas_pen_load,
+                    chr == 4 &
+                        ps > 60941465 - 2e6 &
+                        ps < 60941465 + 2e6)
+
+load_chrZ <- filter(gwas_pen_load,
+                    chr == "Z" &
+                        ps > 33957226 - 2e6 &
+                        ps < 33960416 + 2e6)
+
+load_chr2_locus1 <- filter(gwas_cage_load,
+                           chr == 2 &
+                               ps > 109944191 - 2e6 &
+                               ps < 110288659 + 2e6)
+
+load_chr2_locus2 <- filter(gwas_cage_load,
+                           chr == 2 &
+                               ps > 118267538 - 2e6 &
+                               ps < 125198709 + 2e6)
+
+
+load_chr3 <- filter(gwas_cage_load,
+                    chr == 3 &
+                        ps > 91588936 - 2e6 &
+                        ps < 91588936 + 2e6)
+
+load_chr11_locus1 <- filter(gwas_cage_load,
+                            chr == 11 &
+                                ps > 5913130 - 2e6 &
+                                ps < 5913130 + 2e6)
+
+load_chr11_locus2 <- filter(gwas_cage_load,
+                            chr == 11 &
+                                ps > 18476664 - 2e6 &
+                                ps < 18476664 + 2e6)
+
+
+
+
+formatting_load_hits <- list(geom_hline(yintercept = -log10(1e-4),
+                                        colour = "blue",
+                                        linetype = 2),
+                             theme_bw(),
+                             theme(panel.grid = element_blank(),
+                                   strip.background = element_blank()),
+                             ylim(0, 8),
+                             xlab("Position (Mbp)"),
+                             ylab("-log(p)"))
+
+plot_hit <- function(hit, formatting) {
+    qplot(x = ps/1e6, y = -log10(p), data = hit) +
+        formatting
+}
+
+plot_load_hits <- plot_hit(load_chr4, formatting_load_hits) + ggtitle("Bone strength, chr 4 (PEN)") +
+    plot_hit(load_chrZ, formatting_load_hits) + ggtitle("Bone strength, chr Z (PEN)") +
+    plot_hit(load_chr2_locus1, formatting_load_hits) + ggtitle("Bone strength, chr 2 (CAGE)") +
+    plot_hit(load_chr2_locus2, formatting_load_hits) + ggtitle("Bone strength, chr 2 (CAGE)") +
+    plot_hit(load_chr3, formatting_load_hits) + ggtitle("Bone strength, chr 3 (CAGE)") +
+    plot_hit(load_chr11_locus1, formatting_load_hits) + ggtitle("Bone strength, chr 11 (CAGE)") +
+    plot_hit(load_chr11_locus2, formatting_load_hits) + ggtitle("Bone strength, chr 11 (CAGE)") +
+    plot_layout(ncol = 2)
+                   
+
+pdf("figures/plot_load_hits_hglm.pdf")
+print(plot_load_hits)
+dev.off()
+
+
+
+
+weight_chr4 <- filter(gwas_all_weight,
+                      chr == 4 &
+                          ps > 73994772 - 2e6 &
+                          ps < 78415388 + 2e6)
+
+weight_chr6 <- filter(gwas_all_weight,
+                      chr == 6 &
+                          ps > 11403561 - 2e6 &
+                          ps < 11558459 + 2e6)
+
+weight_chr27 <- filter(gwas_all_weight,
+                      chr == 27 &
+                          ps > 6070932 - 2e6 &
+                          ps < 6147189 + 2e6)
+
+formatting_weight_hits <- list(geom_hline(yintercept = -log10(5e-8),
+                                          colour = "blue",
+                                          linetype = 2),
+                               theme_bw(),
+                               theme(panel.grid = element_blank(),
+                                     strip.background = element_blank()),
+                               ylim(0, 15),
+                               xlab("Position (Mbp)"),
+                               ylab("-log(p)"))
+
+
+plot_weight_hits <- plot_hit(weight_chr4, formatting_weight_hits) + ggtitle("Body weight, chr 4 (JOINT)") +
+    plot_hit(weight_chr6, formatting_weight_hits) + ggtitle("Body weight, chr 6 (JOINT)") + 
+    plot_hit(weight_chr27, formatting_weight_hits) + ggtitle("Body weight, chr 27 (JOINT)") + 
+    plot_layout(ncol = 1)
+
+
+pdf("figures/plot_weight_hits_hglm.pdf")
+print(plot_weight_hits)
+dev.off()
