@@ -54,6 +54,16 @@ gwas_all_weight <- inner_join(map, gwas_all_weight)
 gwas_all_weight_conditional <- inner_join(map, gwas_all_weight_conditional)
 
 
+saveRDS(gwas_pen_load,
+        file = "outputs/gwas_pen_load_coord.Rds")
+
+saveRDS(gwas_cage_load,
+        file = "outputs/gwas_cage_load_coord.Rds")
+
+saveRDS(gwas_all_load,
+        file = "outputs/gwas_all_load_coord.Rds")
+
+
 ## Set up chromosome lengths and marker positions for Manhattan plots
 
 chr_lengths <- summarise(group_by(gwas_all_weight, chr), length = unique(max(ps)))
@@ -409,3 +419,128 @@ plot_weight_hits <- plot_hit(weight_chr4, formatting_weight_hits) + ggtitle("Bod
 pdf("figures/plot_weight_hits_hglm.pdf")
 print(plot_weight_hits)
 dev.off()
+
+
+
+
+## Create tables
+
+supplementary_load_table <- rbind(transform(gwas_pen_load[, -7], scan = "PEN"),
+                                  transform(gwas_cage_load[, -7], scan = "CAGE"),
+                                  transform(gwas_all_load[, -7], scan = "JOINT"))
+
+supplementary_weight_table <- rbind(transform(gwas_pen_weight[, -7], scan = "PEN"),
+                                    transform(gwas_cage_weight[, -7], scan = "CAGE"),
+                                    transform(gwas_all_weight[, -7], scan = "JOINT"))
+
+
+supplementary_suggestive_load <- filter(supplementary_load_table,
+                                        p < 1e-4)
+supplementary_suggestive_load <-
+    supplementary_suggestive_load[order(as.numeric(supplementary_suggestive_load$chr),
+                                                                     supplementary_suggestive_load$ps),]
+
+
+supplementary_suggestive_weight <- filter(supplementary_weight_table,
+                                        p < 5e-8)
+supplementary_suggestive_weight <-
+    supplementary_suggestive_weight[order(as.numeric(supplementary_suggestive_weight$chr),
+                                          supplementary_suggestive_weight$ps),]
+
+
+write_csv(supplementary_load_table,
+          "tables/supplementary_data_bone_strength_summary_statistics.csv")
+
+write_csv(supplementary_load_table, 
+          "tables/supplementary_data_weight_summary_statistics.csv")
+
+write_csv(supplementary_suggestive_load, 
+          "tables/supplementary_table_bone_strength_hits.csv")
+
+write_csv(supplementary_suggestive_weight, 
+          "tables/supplementary_table_weight_hits.csv")
+
+
+
+
+## GALLO analysis of regions
+
+library(GALLO)
+
+
+qtl_annotation <- import_gff_gtf("annotation/chickenqtldb2020-06_16.txt", "gff")
+
+qtl_bed <- data.frame(chr = paste("chr", qtl_annotation$chr, sep = ""),
+                      start = qtl_annotation$start_pos - 1,
+                      end = qtl_annotation$end_pos,
+                      qtlid = 1:nrow(qtl_annotation),
+                      stringsAsFactors = FALSE)
+
+write.table(qtl_bed,
+            file = "temp_qtl_bed.txt",
+            sep = "\t",
+            quote = FALSE,
+            row.names = FALSE,
+            col.names = FALSE)
+
+## Lift with UCSC liftOver
+
+qtl_bed_lifted <- read_tsv("annotation/chickenqtldb_liftover.bed",
+                           col_names = FALSE)
+colnames(qtl_bed_lifted) <- c("chr_lifted", "start_lifted", "end_lifted", "qtlid")
+
+qtl_annotation$qtlid <- 1:nrow(qtl_annotation)
+
+qtl_annotation_lifted <- inner_join(qtl_bed_lifted,
+                                    qtl_annotation)
+
+qtl_annotation_lifted$start_pos <- qtl_annotation_lifted$start_lifted
+qtl_annotation_lifted$end_pos <- qtl_annotation_lifted$end_lifted
+
+qtl_annotation_lifted <- qtl_annotation_lifted[5:10]
+
+weight_gallo <- supplementary_suggestive_weight[, c("chr", "ps")]
+colnames(weight_gallo) <- c("CHR", "BP")
+
+
+load_gallo <- supplementary_suggestive_load[, c("chr", "ps")]
+colnames(load_gallo) <- c("CHR", "BP")
+
+
+gallo_overlap_weight <- find_genes_qtls_around_markers(db_file = as.data.frame(qtl_annotation),
+                                                       marker_file = as.data.frame(weight_gallo),
+                                                       marker = "snp",
+                                                       method = "qtl")
+
+gallo_overlap_load <- find_genes_qtls_around_markers(db_file = as.data.frame(qtl_annotation),
+                                                     marker_file = as.data.frame(load_gallo),
+                                                     marker = "snp",
+                                                     method = "qtl")
+
+
+
+gallo_enrichment_weight <- qtl_enrich(qtl_db = as.data.frame(qtl_annotation_lifted),
+                                      qtl_file = as.data.frame(qtl_overlap_weight),
+                                      qtl_type = "Name",
+                                      enrich_type = "genome",
+                                      chr.subset = NULL,
+                                      padj = "holm")
+
+gallo_enrichment_load <- qtl_enrich(qtl_db = as.data.frame(qtl_annotation_lifted),
+                                    qtl_file = as.data.frame(gallo_overlap_load),
+                                    qtl_type = "Name",
+                                    enrich_type = "genome",
+                                    chr.subset = NULL,
+                                    padj = "holm")
+           
+
+
+
+
+GALLO::QTLenrich_plot(gallo_enrichment_weight, x = "QTL", pval = "adj.pval")
+
+GALLO::QTLenrich_plot(gallo_enrichment_load, x = "QTL", pval = "adj.pval")
+
+
+
+
