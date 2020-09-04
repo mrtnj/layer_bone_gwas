@@ -57,7 +57,7 @@ for (snp_ix in 1:n_snps) {
         estimate[snp_ix] <- model$SummVC1[3, 1]
         se[snp_ix] <- model$SummVC1[3, 2]
         
-        test <- lrt(model)
+        test <- lrt(null_model, model)
         LRT[snp_ix] <- test$statistic
         p[snp_ix] <- test$p.value
     } else {
