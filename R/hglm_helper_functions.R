@@ -30,6 +30,10 @@ get_group_ratio <- function(model) {
     model$varRanef[2] / (model$varFix + sum(model$varRanef))
 }
 
+get_var_ratio <- function(model, component) {
+    model$varRanef[component] / (model$varFix + sum(model$varRanef))
+}
+
 
 ## Read plink data
 
