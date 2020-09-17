@@ -173,16 +173,17 @@ dev.off()
 ## Investigating the min, max, and range of groups
 
 group_range <- function(pheno) {
-    summarise(group_by(pheno, group, cage.pen),
+    summarise(group_by(pheno, group, cage.pen, breed),
               mean = mean(comb_residual),
               min = min(comb_residual),
               max = max(comb_residual),
               range = max - min)
 }
 
-group_size <- as.data.frame(table(pheno$group),
+group_size <- as.data.frame(table(pheno$group, pheno$breed),
                             stringsAsFactors = FALSE)
-colnames(group_size) <- c("group", "size")
+colnames(group_size) <- c("group", "breed", "size")
+group_size <- filter(group_size, size != 0)
 group_size$cage.pen <- ifelse(group_size$group > 2000,
                               "CAGE",
                               "PEN")
@@ -190,7 +191,7 @@ group_size$cage.pen <- ifelse(group_size$group > 2000,
 
 
 sim_groups <- function() {
-    do(group_by(group_size, group, cage.pen), {
+    do(group_by(group_size, group, cage.pen, breed), {
         random_inds <- sample(1:nrow(pheno), .$size, replace = TRUE)
         data.frame(comb_residual = pheno$comb_residual[random_inds])
     })
@@ -204,8 +205,8 @@ real_group_range <- group_range(pheno)
 sim_group_range <- lapply(sim_group_size, group_range)
 
 
-long_real_range <- pivot_longer(real_group_range, -c("group", "cage.pen"))
-long_sim_range <- pivot_longer(sim_group_range[[1]], -c("group", "cage.pen"))
+long_real_range <- pivot_longer(real_group_range, -c("group", "cage.pen", "breed"))
+long_sim_range <- pivot_longer(sim_group_range[[1]], -c("group", "cage.pen", "breed"))
 
 
 long_real_range$Name <- ""
@@ -217,10 +218,10 @@ long_real_range$Name <- factor(long_real_range$Name,
 
 
 plot_real_range <- qplot(x = value, fill = cage.pen, data = long_real_range) +
-    facet_wrap(~ name, scale = "free")
+    facet_wrap(breed ~ name, scale = "free")
 
 plot_sim_range <- qplot(x = value, fill = cage.pen, data = long_sim_range) +
-    facet_wrap(~ name, scale = "free")
+    facet_wrap(breed ~ name, scale = "free")
     
 
 plot_sim_vs_real <- ggarrange(plot_real_range, plot_sim_range)
@@ -243,13 +244,14 @@ plot_group_ranges_bars <- qplot(x = factor(group),
           axis.text.x = element_blank(),
           axis.ticks.x = element_blank()) +
     xlab("Group") +
-    ylab("Range and mean of residual comb mass")
+    ylab("Range and mean of residual comb mass") +
+    facet_wrap(~breed)
 
 
 plot_max_min_histograms <- qplot(x = value, fill = cage.pen,
                                  data = filter(long_real_range,
                                                name %in% c("max", "mean", "min"))) +
-    facet_wrap(~ Name) +
+    facet_wrap(breed ~ Name) +
     scale_fill_manual(values = c("grey", "black"), name = "") +
     theme_bw() +
     theme(panel.grid = element_blank(),
@@ -271,11 +273,11 @@ dev.off()
 
 ## GWAS
 
-gwas_pen <- read_tsv("gwas/pen_comb_adj/output/pen_comb_adj.assoc.txt",
+gwas_pen <- read_tsv("gwas/pen_comb_g/output/pen_comb_g.assoc.txt",
                      col_types = "ccnnccnnnnnnnnn")
-gwas_cage <- read_tsv("gwas/cage_comb_adj/output/cage_comb_adj.assoc.txt",
+gwas_cage <- read_tsv("gwas/cage_comb_g/output/cage_comb_g.assoc.txt",
                       col_types = "ccnnccnnnnnnnnn")
-gwas_all <- read_tsv("gwas/all_comb_adj/output/all_comb_adj.assoc.txt",
+gwas_all <- read_tsv("gwas/all_comb_g/output/all_comb_g.assoc.txt",
                      col_types = "ccnnccnnnnnnnnn")
 
 
@@ -346,19 +348,21 @@ dev.off()
 
 suggestive_hit <- filter(gwas_pen, p_wald < 1e-5)
 
+focal_marker <- suggestive_hit$rs
+focal_chr <- suggestive_hit$chr
 
 region_pen <- filter(gwas_pen,
-                     chr == 6 &
+                     chr == focal_chr &
                      ps > suggestive_hit$ps - 2e6 &
                      ps < suggestive_hit$ps + 2e6)
 
 region_cage <- filter(gwas_cage,
-                      chr == 6 &
+                      chr == focal_chr &
                       ps > suggestive_hit$ps - 2e6 &
                       ps < suggestive_hit$ps + 2e6)
 
 region_all <- filter(gwas_all,
-                     chr == 6 &
+                     chr == focal_chr &
                      ps > suggestive_hit$ps - 2e6 &
                      ps < suggestive_hit$ps + 2e6)
 
@@ -367,11 +371,11 @@ region_all <- filter(gwas_all,
 
 geno <- readRDS("outputs/geno.Rds")
 
-get_ld <- function(geno, region) {
+get_ld <- function(geno, region, focal_marker) {
 
     geno <- geno[,colnames(geno) %in% region$rs]
     
-    focal_geno <- as.genotype(as.data.frame(geno)[, suggestive_hit$rs])
+    focal_geno <- as.genotype(as.data.frame(geno)[, focal_marker])
     
     r2 <- numeric(ncol(geno))
     
@@ -385,13 +389,16 @@ get_ld <- function(geno, region) {
 }
 
 region_pen$ld <- get_ld(geno[geno$individual >= 1000,],
-                        region_pen)
+                        region_pen,
+                        focal_marker)
 
 region_cage$ld <- get_ld(geno[geno$individual < 1000,],
-                        region_cage)
+                        region_cage,
+                        focal_marker)
 
 region_all$ld <- get_ld(geno,
-                        region_all)
+                        region_all,
+                        focal_marker)
 
 
 
@@ -409,17 +416,17 @@ formatting_hits <- list(theme_bw(),
 plot_hit_pen <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
                       data = region_pen) +
     formatting_hits + theme(legend.position = "right") +
-    ggtitle("Chromosome 6 locus (PEN)")
+    ggtitle("Chromosome 15 locus (PEN)")
 
 plot_hit_cage <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
                       data = region_cage) +
     formatting_hits + 
-    ggtitle("Chromosome 6 locus (CAGE)")
+    ggtitle("Chromosome 15 locus (CAGE)")
 
 plot_hit_all <- qplot(x = ps/1e6, y = -log10(p_wald), colour = ld,
                       data = region_all) +
     formatting_hits +
-    ggtitle("Chromosome 6 locus (JOINT)")
+    ggtitle("Chromosome 15 locus (JOINT)")
 
 plot_hit_combined <- ggarrange(plot_hit_cage,
                                plot_hit_pen,
@@ -429,6 +436,6 @@ plot_hit_combined <- ggarrange(plot_hit_cage,
 
 
 
-pdf("figures/comb_chr6_locus.pdf")
+pdf("figures/comb_chr15_locus.pdf")
 print(plot_hit_combined)
 dev.off()
