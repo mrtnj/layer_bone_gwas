@@ -76,9 +76,13 @@ all_weight_covar$group_cages_combined <- ifelse(all_weight_covar$group > 2000,
 
 Z_pen_load_group <- model.matrix(~ factor(group), pen_load_covar)
 
+Z_cage_load_group <- model.matrix(~ factor(group), cage_load_covar)
+
 Z_all_load_group <- model.matrix(~ factor(group_cages_combined), all_load_covar)
 
 Z_pen_weight_group <- model.matrix(~ factor(group), pen_weight_covar)
+
+Z_cage_weight_group <- model.matrix(~ factor(group), cage_weight_covar)
 
 Z_all_weight_group <- model.matrix(~ factor(group_cages_combined), all_weight_covar)
 
