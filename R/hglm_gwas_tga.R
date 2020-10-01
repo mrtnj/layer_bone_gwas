@@ -1,6 +1,6 @@
 
 
-## Perform GWAS on selected TGA traits
+## Perform GWAS on selected pQCT/TGA traits
 
 library(assertthat)
 library(dplyr)
@@ -13,77 +13,88 @@ source("R/hglm_helper_functions.R")
 
 source("R/hglm_gwas_tga_prepare_data.R")
 
-gwas_pen_load <- run_gwas(pen_load$data$X6,
-                          model.matrix(~ 1 + weight + breed, pen_load_covar),
-                          cbind(Z_grm_pen_load, Z_pen_load_group),
-                          c(ncol(Z_grm_pen_load), ncol(Z_pen_load_group)),
-                          snps_pruned_pen_load)
 
-saveRDS(gwas_pen_load,
-        file = "gwas/hglm_gwas_pen_load.Rds")
+h2_results <- read_csv("tables/table_bone_phenotype_h2.csv")
 
+cage_traits <- filter(h2_results, lrt_cage < 0.05)$name
+pen_traits <- filter(h2_results, lrt_pen < 0.05)$name
+all_traits <- intersect(cage_traits, pen_traits)
 
-gwas_cage_load <- run_gwas(cage_load$data$X6,
-                          model.matrix(~ 1 + weight + breed, cage_load_covar),
-                          Z_grm_cage_load,
-                          ncol(Z_grm_cage_load),
-                          snps_pruned_cage_load)
+cage_trait_ix <- match(cage_traits, tga_traits)
+pen_trait_ix <- match(pen_traits, tga_traits)
+all_trait_ix <- match(all_traits, tga_traits)
 
-saveRDS(gwas_cage_load,
-        file = "gwas/hglm_gwas_cage_load.Rds")
-
-
-gwas_all_load <- run_gwas(all_load$data$X6,
-                          model.matrix(~ 1 + weight + breed + cage.pen, all_load_covar),
-                          cbind(Z_grm_all_load, Z_all_load_group),
-                          c(ncol(Z_grm_all_load), ncol(Z_all_load_group)),
-                          snps_pruned_all_load)
-
-saveRDS(gwas_all_load,
-        file = "gwas/hglm_gwas_all_load.Rds")
-
-
-
-gwas_pen_weight <- run_gwas(pen_weight$data$X6,
-                            model.matrix(~ 1 + breed, pen_weight_covar),
-                            cbind(Z_grm_pen_weight, Z_pen_weight_group),
-                            c(ncol(Z_grm_pen_weight), ncol(Z_pen_weight_group)),
-                            snps_pruned_pen_weight)
-
-saveRDS(gwas_pen_weight,
-        file = "gwas/hglm_gwas_pen_weight.Rds")
-
-gwas_cage_weight <- run_gwas(cage_weight$data$X6,
-                             model.matrix(~ 1 + breed, cage_weight_covar),
-                             Z_grm_cage_weight,
-                             ncol(Z_grm_cage_weight),
-                             snps_pruned_cage_weight)
-
-saveRDS(gwas_cage_weight,
-        file = "gwas/hglm_gwas_cage_weight.Rds")
-
-gwas_all_weight <- run_gwas(all_weight$data$X6,
-                            model.matrix(~ 1 + breed + cage.pen, all_weight_covar),
-                            cbind(Z_grm_all_weight, Z_all_weight_group),
-                            c(ncol(Z_grm_all_weight), ncol(Z_all_weight_group)),
-                            snps_pruned_all_weight)
-
-saveRDS(gwas_all_weight,
-        file = "gwas/hglm_gwas_all_weight.Rds")
+gwas_pen <- mapply(function(data, covar, Z_grm, Z_group, snps, trait_name) {
+    gwas <- run_gwas(data$data$X6,
+                     model.matrix(~ 1 + weight + breed, covar),
+                     cbind(Z_grm, Z_group),
+                     c(ncol(Z_grm), ncol(Z_group)),
+                     snps)
+    gwas$trait <- trait_name
+    gwas
+},
+data_pen[pen_trait_ix],
+pen_covar[pen_trait_ix],
+Z_grm_pen[pen_trait_ix],
+Z_pen_group[pen_trait_ix],
+snps_pruned_pen[pen_trait_ix],
+pen_traits,
+SIMPLIFY = FALSE)
+    
+gwas_pen_df <- Reduce(rbind, gwas_pen)
 
 
+saveRDS(gwas_pen_df,
+        file = "gwas/hglm_gwas_pen_bone_phenotypes.Rds")
 
-peak_marker <- as.character(gwas_all_weight$marker_id[which.min(gwas_all_weight$p)])
 
-X_covar <- model.matrix(~ 1 + breed + cage.pen, all_weight_covar)
+gwas_cage <- mapply(function(data, covar, Z_grm, snps, trait_name) {
+    gwas <- run_gwas(data$data$X6,
+                     model.matrix(~ 1 + weight + breed, covar),
+                     Z_grm,
+                     ncol(Z_grm),
+                     snps)
+    gwas$trait <- trait_name
+    gwas
+},
+data_cage[cage_trait_ix],
+cage_covar[cage_trait_ix],
+Z_grm_cage[cage_trait_ix],
+snps_pruned_cage[cage_trait_ix],
+cage_traits,
+SIMPLIFY = FALSE)
 
-X_covar_snp <- cbind(X_covar, as.data.frame(snps_pruned_all_weight)[, peak_marker])
 
-gwas_all_weight_conditional <- run_gwas(all_weight$data$X6,
-                                        X_covar_snp,
-                                        cbind(Z_grm_all_weight, Z_all_weight_group),
-                                        c(ncol(Z_grm_all_weight), ncol(Z_all_weight_group)),
-                                        snps_pruned_all_weight)
+gwas_cage_df <- Reduce(rbind, gwas_cage)
 
-saveRDS(gwas_all_weight_conditional,
-        file = "gwas/hglm_gwas_all_weight_conditional.Rds")
+
+saveRDS(gwas_cage_df,
+        file = "gwas/hglm_gwas_cage_bone_phenotypes.Rds")
+
+
+
+gwas_all <- mapply(function(data, covar, Z_grm, Z_group, snps, trait_name) {
+    gwas <- run_gwas(data$data$X6,
+                     model.matrix(~ 1 + weight + breed + cage.pen, covar),
+                     cbind(Z_grm, Z_group),
+                     c(ncol(Z_grm), ncol(Z_group)),
+                     snps)
+    gwas$trait <- trait_name
+    gwas
+},
+data_all[all_trait_ix],
+all_covar[all_trait_ix],
+Z_grm_all[all_trait_ix],
+Z_all_group[all_trait_ix],
+snps_pruned_all[all_trait_ix],
+all_traits,
+SIMPLIFY = FALSE)
+
+
+gwas_all_df <- Reduce(rbind, gwas_all)
+
+saveRDS(gwas_all,
+        file = "gwas/hglm_gwas_all_bone_phenotypes.Rds")
+
+
+
