@@ -64,6 +64,16 @@ saveRDS(gwas_all_load,
         file = "outputs/gwas_all_load_coord.Rds")
 
 
+saveRDS(gwas_pen_weight,
+        file = "outputs/gwas_pen_weight_coord.Rds")
+
+saveRDS(gwas_cage_weight,
+        file = "outputs/gwas_cage_weight_coord.Rds")
+
+saveRDS(gwas_all_weight,
+        file = "outputs/gwas_all_weight_coord.Rds")
+
+
 ## Set up chromosome lengths and marker positions for Manhattan plots
 
 chr_lengths <- summarise(group_by(gwas_all_weight, chr), length = unique(max(ps)))
@@ -520,7 +530,7 @@ gallo_overlap_load <- find_genes_qtls_around_markers(db_file = as.data.frame(qtl
 
 
 gallo_enrichment_weight <- qtl_enrich(qtl_db = as.data.frame(qtl_annotation_lifted),
-                                      qtl_file = as.data.frame(qtl_overlap_weight),
+                                      qtl_file = as.data.frame(gallo_overlap_weight),
                                       qtl_type = "Name",
                                       enrich_type = "genome",
                                       chr.subset = NULL,
@@ -534,13 +544,39 @@ gallo_enrichment_load <- qtl_enrich(qtl_db = as.data.frame(qtl_annotation_lifted
                                     padj = "holm")
            
 
+gallo_plot <- function(enrichment) {
+    ggplot(enrichment,
+           aes(x = N_QTLs / N_QTLs_db,
+               y = QTL,
+               size = N_QTLs,
+               color = -log10(pvalue))) +
+        geom_point() + 
+        scale_color_gradient() + 
+        scale_size(range = c(2, 7),
+                   name = "Number of QTL") + 
+        theme_bw() + 
+        theme(panel.grid.minor = element_blank(),
+              panel.grid.major.x = element_blank()) + 
+        labs(x = "Ratio of QTL in regions to QTL in database") +
+        labs(size = "Number of QTLs", 
+             col = "-log(p)") +
+        ylab("")
+}
+
+plot_gallo_weight <- gallo_plot(gallo_enrichment_weight) +
+    ggtitle("Enrichment of QTL overlapping body weigth associations")
 
 
 
-GALLO::QTLenrich_plot(gallo_enrichment_weight, x = "QTL", pval = "adj.pval")
-
-GALLO::QTLenrich_plot(gallo_enrichment_load, x = "QTL", pval = "adj.pval")
-
+plot_gallo_load <- gallo_plot(gallo_enrichment_load) +
+    ggtitle("Enrichment of QTL overlapping bone strength associations")
 
 
+
+plot_gallo <- plot_gallo_weight / plot_gallo_load
+
+
+pdf("figures/gallo_enrichment.pdf", width = 10, height = 10)
+print(plot_gallo)
+dev.off()
 
