@@ -93,7 +93,7 @@ SIMPLIFY = FALSE)
 
 gwas_all_df <- Reduce(rbind, gwas_all)
 
-saveRDS(gwas_all,
+saveRDS(gwas_all_df,
         file = "gwas/hglm_gwas_all_bone_phenotypes.Rds")
 
 
