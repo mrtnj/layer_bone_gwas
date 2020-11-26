@@ -232,3 +232,16 @@ plot_scatter_combined <- ggarrange(plot_scatter_nocomb, plot_scatter_ests, heigh
 pdf("figures/plot_bw_regression.pdf")
 print(plot_scatter_combined)
 dev.off()
+
+
+## Feed
+
+table(pheno$feed)
+
+table(pheno$feed, pheno$cage.pen)
+
+table(pheno$feed, pheno$cage.pen, pheno$breed)
+
+model_feed <- lm(load_N ~ feed + cage.pen + breed, data = pheno)
+
+print(summary(model_feed))
