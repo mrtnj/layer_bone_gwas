@@ -103,7 +103,7 @@ plot_ct_heatmap <- qplot(x = trait1,
     theme_bw() +
     theme(axis.text.x = element_text(angle = -90),
           panel.grid = element_blank()) +
-    xlab("") + ylab("") + ggtitle("Pearson correlation between pQCT phenotypes")
+    xlab("") + ylab("") + ggtitle("Pearson correlation between QCT phenotypes")
 
 
 ct_pca_variance <- data.frame(var_explained = summary(ct_pca)$importance["Proportion of Variance",])
@@ -124,7 +124,7 @@ plot_ct_pc_variance <- ggplot() +
     ylim(0, 1) +
     xlab("Principal component") +
     ylab("Proportion variance explained") +
-    ggtitle("Variance explained by pQCT principal components")
+    ggtitle("Variance explained by QCT principal components")
 
 
 
@@ -204,7 +204,7 @@ plot_tga_load <- qplot(x = load_N,
     geom_smooth(method = lm)
 
 
-pretty_tga_trait_names <- read_csv("pretty_trait_names_tga.csv")
+pretty_tga_trait_names <- read_csv("pretty_trait_names_tga.csv")[,1:2]
 
 tga_cor_long <- pivot_longer(data.frame(trait1 = rownames(tga_cor),
                                         tga_cor,
@@ -300,9 +300,9 @@ models_ct <- model_breed_cagepen(ct_model_data_long)
 
 contr_ct <- models_ct$contr
 
-contr_ct$pretty_name <- rep(c("pQCT PC1 'high density, thickness, content'",
-                              "pQCT PC2 'long bone length'",
-                              "pQCT PC3 'low cortical density'"),
+contr_ct$pretty_name <- rep(c("QCT PC1 'high density, thickness, content'",
+                              "QCT PC2 'long bone length'",
+                              "QCT PC3 'low cortical density'"),
                             each = 2)
 
 
@@ -406,13 +406,23 @@ plot_tga_coef <- qplot(x = Term,
     ylab("") 
 
 
+
+
+combined_tga_ct_contr <- rbind(contr_ct,
+                               tga_contr_pretty)
+
+combined_tga_ct_contr$pretty_name <- factor(combined_tga_ct_contr$pretty_name,
+                                            levels = c(pretty_tga_trait_names$pretty_name[c(8, 1, 9, 2, 10, 3, 11,
+                                                                                            4, 12, 5, 13, 6, 14, 7)],
+                                                       unique(contr_ct$pretty_name)))
+
+
 plot_tga_contr <- qplot(x = contrast,
                         y = estimate,
                         ymin = conf.low,
                         ymax = conf.high,
                         geom = "pointrange",
-                        data = rbind(contr_ct,
-                                     tga_contr_pretty)) +
+                        data = combined_tga_ct_contr) +
     facet_wrap(~ pretty_name, scale = "free", ncol = 2) +
     geom_hline(yintercept = 0,
                colour = "red",
@@ -502,3 +512,88 @@ plot_pqct_tga_split_heatmap <- ggplot() +
 pdf("figures/plot_bone_heatmap.pdf", width = 8, height = 10)
 print(plot_pqct_tga_split_heatmap)
 dev.off()
+
+
+
+## Random forest classification
+
+library(randomForest)
+
+set.seed(20200925)
+
+rf_pheno <- na.exclude(pheno[, c(3, ct_ix, tga_ix)])
+
+rf_pheno_split <- split(rf_pheno, rf_pheno$cage.pen)
+
+n_cage <- nrow(rf_pheno_split[[1]])
+n_pen <- nrow(rf_pheno_split[[2]])
+
+test_cage_ix <- sample(1:n_cage, 50)
+test_pen_ix <- sample(1:n_pen, 50)
+
+training_cage <- rf_pheno_split[[1]][-test_cage_ix,]
+training_pen <- rf_pheno_split[[2]][-test_pen_ix,]
+
+training <- rbind(training_cage,
+                  training_pen)
+
+testing_cage <- rf_pheno_split[[1]][test_cage_ix,]
+testing_pen <- rf_pheno_split[[2]][test_pen_ix,]
+
+testing <- rbind(testing_cage,
+                 testing_pen)
+
+
+rfs <- lapply(c(100, 500, 1000),
+              function(ntree) 
+                  randomForest(cage.pen ~ .,
+                               data = training,
+                               ntree = ntree,
+                               importance = TRUE))
+
+
+rf_pheno_ct <- na.exclude(pheno[, c(3, ct_ix)])
+
+rf_pheno_ct_split <- split(rf_pheno_ct, rf_pheno_ct$cage.pen)
+
+n_cage_ct <- nrow(rf_pheno_ct_split[[1]])
+n_pen_ct <- nrow(rf_pheno_ct_split[[2]])
+
+test_cage_ix_ct <- sample(1:n_cage_ct, 50)
+test_pen_ix_ct <- sample(1:n_pen_ct, 50)
+
+training_cage_ct <- rf_pheno_ct_split[[1]][-test_cage_ix_ct,]
+training_pen_ct <- rf_pheno_ct_split[[2]][-test_pen_ix_ct,]
+
+training_ct <- rbind(training_cage_ct,
+                     training_pen_ct)
+
+testing_cage_ct <- rf_pheno_ct_split[[1]][test_cage_ix_ct,]
+testing_pen_ct <- rf_pheno_ct_split[[2]][test_pen_ix_ct,]
+
+testing_ct <- rbind(testing_cage_ct,
+                    testing_pen_ct)
+
+
+rfs_ct <- lapply(c(100, 500, 1000),
+                 function(ntree) 
+                     randomForest(cage.pen ~ .,
+                                  data = training_ct,
+                                  ntree = ntree,
+                                  importance = TRUE))
+
+get_oob_error <- function(rf) rf$err.rate[nrow(rf$err.rate), 1]
+
+unlist(lapply(rfs, get_oob_error))
+unlist(lapply(rfs_ct, get_oob_error))
+
+randomForest::varImpPlot(rfs[[2]])
+randomForest::varImpPlot(rfs_ct[[2]])
+
+
+rf_pred <- predict(rfs[[2]], testing)
+rf_pred_table <- table(rf_pred, testing$cage.pen)
+
+
+rf_pred_ct <- predict(rfs_ct[[2]], testing_ct)
+rf_pred_ct_table <- table(rf_pred_ct, testing_ct$cage.pen)

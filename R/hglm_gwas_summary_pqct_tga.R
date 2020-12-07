@@ -42,10 +42,10 @@ gwas_all <- inner_join(map, gwas_all)
 
 
 pretty_trait_names <- rbind(data.frame(name = c("ct_pc1", "ct_pc2", "ct_pc3"),
-                                       pretty_name = c("pQCT PC1 'high density, thickness, content'",
-                                                             "pQCT PC2 'long bone length'",
-                                                             "pQCT PC3 'low cortical density'")),
-                            read_csv("pretty_trait_names_tga.csv"))
+                                       pretty_name = c("QCT PC1 'high density, thickness, content'",
+                                                             "QCT PC2 'long bone length'",
+                                                             "QCT PC3 'low cortical density'")),
+                            read_csv("pretty_trait_names_tga.csv")[,1:2])
 colnames(pretty_trait_names)[1] <- "trait"
 
 
