@@ -94,26 +94,145 @@ suggestive_regions_pruned <- mapply(function(ranges1, ranges2) ranges1[!ranges1 
                                     significant_regions,
                                     SIMPLIFY = FALSE)
 
-significant_table <- map_dfr(significant_regions, as.data.frame, .id = "trait")
+## We now have the regions that are significant/suggestive for each trait. Now
+## we need to go back and find the underlying SNPs
 
-suggestive_table <- map_dfr(suggestive_regions, as.data.frame, .id = "trait")
+
+## Function to extract overlapping SNPs from a GenomicRanges object of QTL regions from a scan
+
+get_snps <- function(regions, scan_name, combined) {
+    
+    snps_for_this_trait <- combined[combined$pretty_name == scan_name,]
+    
+    snp_ranges <- GRanges(seqnames = snps_for_this_trait$chr,
+                          ranges = IRanges(snps_for_this_trait$ps, snps_for_this_trait$ps),
+                          mcols = snps_for_this_trait)
+    
+    n_qtl <- length(regions)
+    
+    qtl_ranges_list <- vector(mode = "list",
+                              length = n_qtl)
+    
+    if (n_qtl > 0) {
+        
+        for (qtl_ix in 1:n_qtl) {
+            qtl_ranges_list[[qtl_ix]] <- subsetByOverlaps(snp_ranges,
+                                                          regions[qtl_ix])
+            
+        }
+    }
+    
+    qtl_ranges_list
+}
 
 
-significant_table$approximate_location <- round((significant_table$start +
-                                                     significant_table$end)/2/1e6)
+## Find the most significant SNP in each region, extract statistics
+
+get_top_snps <- function(regions) {
+
+    n_qtl <- length(regions)
+    
+    top_snps <- vector(mode = "list",
+                       length = n_qtl)
+    
+    if (n_qtl > 0) {
+        
+        for (qtl_ix in 1:n_qtl) {
+            region_df <- as.data.frame(regions[[qtl_ix]])
+            top_snps[[qtl_ix]] <- region_df[region_df$mcols.p == min(region_df$mcols.p),]
+            
+            ## If there are more than one, pick the first
+            if (nrow(top_snps[[qtl_ix]]) > 1) {
+                top_snps[[qtl_ix]] <- top_snps[[qtl_ix]][1,]
+            }
+        }
+    }
+    
+    top_snps
+}
+
+
+## Apply this function to all the significant/suggestive scans
+
+snps_significant_regions <- vector(mode = "list",
+                                   length = length(significant_regions))
+
+top_snps_significant_regions <- vector(mode = "list",
+                                       length = length(significant_regions))
+
+for (scan_ix in 1:length(significant_regions)) {
+    snps_significant_regions[[scan_ix]] <- get_snps(significant_regions[[scan_ix]],
+                                                    names(significant_regions)[scan_ix],
+                                                    combined)
+    top_snps_significant_regions[[scan_ix]] <- get_top_snps(snps_significant_regions[[scan_ix]])
+}
+
+
+snps_suggestive_regions <- vector(mode = "list",
+                                  length = length(suggestive_regions_pruned))
+
+top_snps_suggestive_regions <- vector(mode = "list",
+                                      length = length(suggestive_regions_pruned))
+
+for (scan_ix in 1:length(suggestive_regions_pruned)) {
+    snps_suggestive_regions[[scan_ix]] <- get_snps(suggestive_regions_pruned[[scan_ix]],
+                                                   names(suggestive_regions_pruned)[scan_ix],
+                                                   combined)
+    top_snps_suggestive_regions[[scan_ix]] <- get_top_snps(snps_suggestive_regions[[scan_ix]])
+}
+
+
+
+
+## Make tables with top SNPs
+
+make_table <- function(scans_list,
+                       top_snps_list) {
+
+    significant_regions_df <- vector(mode = "list",
+                                     length = length(scans_list))
+    
+    for (scan_ix in 1:length(scans_list)) {
+        
+        regions <- as.data.frame(scans_list[[scan_ix]])
+        regions$seqnames <- as.character(regions$seqnames)
+        
+        n_qtl <- nrow(regions)
+        
+        if (n_qtl > 0) {
+            regions$trait <- names(scans_list)[scan_ix]
+            top_snps <- top_snps_list[[scan_ix]]
+            
+            regions$lead_p <- 0
+            regions$lead_pos <- 0
+            
+            for (region_ix in 1:n_qtl) {
+                regions$lead_p[region_ix] <- top_snps[[region_ix]]$mcols.p
+                regions$lead_pos[region_ix] <- top_snps[[region_ix]]$mcols.ps
+            }
+        }
+        
+        significant_regions_df[[scan_ix]] <- regions
+    }
+ 
+    Reduce(rbind, significant_regions_df)
+}
+
+significant_table <- make_table(significant_regions, top_snps_significant_regions)
+
+suggestive_table <- make_table(suggestive_regions_pruned, top_snps_suggestive_regions)
+
+
+
 significant_table <- significant_table[order(as.numeric(significant_table$seqnames),
-                                             significant_table$approximate_location,
-                                             significant_table$trait),]
+                                             significant_table$lead_pos),]
 
-
-suggestive_table$approximate_location <- round((suggestive_table$start +
-                                                     suggestive_table$end)/2/1e6)
 suggestive_table <- suggestive_table[order(as.numeric(suggestive_table$seqnames),
-                                           suggestive_table$approximate_location,
-                                           suggestive_table$trait),]
+                                     suggestive_table$lead_pos),]
 
 
-cols <- c("trait", "seqnames", "approximate_location")
+
+cols <- c("trait", "seqnames", "lead_pos", "lead_p")
 
 write.csv(significant_table[, cols],
           file = "tables/significant_gwas_table.csv",
