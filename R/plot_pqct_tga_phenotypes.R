@@ -444,6 +444,11 @@ combined_tga_ct_fits_main_phenotypes$pretty_name <-
     factor(combined_tga_ct_fits_main_phenotypes$pretty_name,
            levels = unique(combined_tga_ct_fits_main_phenotypes$pretty_name)[subplot_order])
 
+combined_tga_ct_fits_main_phenotypes$pretty_name <- 
+    gsub(combined_tga_ct_fits_main_phenotypes$pretty_name,
+         pattern = "QCT PC1 'high density, thickness, content'",
+         replacement = "QCT PC1 'high density,\nthickness, content'")
+
 plot_tga_estimates_main_phenotypes <- ggplot() +
     geom_pointrange(aes(colour = breed,
                         y = fit,
@@ -528,7 +533,29 @@ dev.off()
 
 
 
+## Plot of main TGA, CT traits with medullary and cortical on the same panel
 
+subplot_trait <- function(data) {
+    ggplot() +
+        geom_pointrange(aes(colour = breed,
+                            y = fit,
+                            ymin = lwr,
+                            ymax = upr,
+                            x = cage.pen),
+                        position = position_dodge(0.5),
+                        data = data) +
+        facet_wrap(~ pretty_name) +
+        scale_colour_manual(values = c("blue", "red"),
+                            name = "") +
+        theme_bw() +
+        theme(panel.grid = element_blank(),
+              strip.background = element_blank()) +
+        xlab("") +
+        ylab("")
+}
+
+subplot_trait(filter(combined_tga_ct_fits_main_phenotypes,
+                     variable %in% c("CO3_over_Phosphates_CB", "CO3_over_Phosphates_MB")))
 
 
 
