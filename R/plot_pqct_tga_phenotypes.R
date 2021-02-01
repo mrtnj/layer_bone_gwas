@@ -16,6 +16,11 @@ pheno <- readRDS("outputs/pheno.Rds")
 
 pheno <- filter(pheno, !is.na(cage.pen))
 
+write.csv(pheno[!grepl("^ftir_", colnames(pheno))],
+          file = "tables/supplementary_data3_phenotypes.csv",
+          quote = FALSE,
+          row.names = FALSE)
+
 
 
 ## pQCT phenotypes
