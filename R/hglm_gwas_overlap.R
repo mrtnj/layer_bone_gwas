@@ -49,7 +49,7 @@ gwas_cage$scan <- "(CAGE)"
 gwas_all$scan <- "(JOINT)"
 
 
-cols <- c("pretty_name", "chr", "ps", "p", "scan")
+cols <- c("pretty_name", "chr", "ps", "marker_id", "estimates", "LRT", "p", "scan")
 
 combined <- rbind(gwas_pen_load[, cols],
                   gwas_cage_load[, cols],
@@ -63,6 +63,11 @@ combined <- rbind(gwas_pen_load[, cols],
 
 combined$pretty_name <- paste(combined$pretty_name,
                               combined$scan)
+
+write.csv(combined,
+          "tables/supplementary_data1_gwas_summary_stats.csv",
+          quote = FALSE,
+          row.names = FALSE)
 
 
 significant <- filter(combined, p < 5e-8)
