@@ -8,8 +8,12 @@ pheno$feed <- ifelse(grepl("kontroll", pheno$feed),
                      "control",
                      "treatment")
 
-write.csv(pheno[!(grepl("^ftir_", colnames(pheno)) &
-                      !(colnames(pheno) %in% c("comb_g", "rna_sampled", "day")))],
+to_exclude <- c(grep("^ftir_", colnames(pheno), value = TRUE),
+                "comb_g", "rna_sampled", "day")
+
+pheno <- pheno[! colnames(pheno) %in% to_exclude]
+
+write.csv(pheno,
           file = "tables/supplementary_data3_phenotypes.csv",
           quote = FALSE,
           row.names = FALSE)
