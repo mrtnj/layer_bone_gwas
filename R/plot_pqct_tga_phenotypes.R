@@ -5,6 +5,7 @@ library(broom)
 library(dplyr)
 library(egg)
 library(ggplot2)
+library(multcomp)
 library(tidyr)
 library(patchwork)
 library(purrr)
@@ -385,34 +386,6 @@ combined_tga_ct_fits <- rbind(fits_tga,
 #                                                                                             4, 12, 5, 13, 6, 14, 7)],
 #                                                        unique(contr_ct$pretty_name)))
 
-ct_model_data_long$pretty_name <- c("QCT PC1 'high density, thickness, content'",
-                                    "QCT PC2 'long bone length'",
-                                    "QCT PC3 'low cortical density'")
-
-
-plot_tga_pheno <- ggplot() +
-    geom_jitter(aes(colour = breed,
-                    y = value,
-                    x = cage.pen),
-                alpha = I(0.2),
-                data = rbind(tga_pheno_long_pretty,
-                             ct_model_data_long)) +
-    geom_pointrange(aes(colour = breed,
-                        y = fit,
-                        ymin = lwr,
-                        ymax = upr,
-                        x = cage.pen),
-                    position = position_dodge(0.5),
-                    data = combined_tga_ct_fits) +
-    facet_wrap(~ pretty_name, scale = "free_y", ncol = 2) +
-    scale_colour_manual(values = c("blue", "red"),
-                        name = "") +
-    theme_bw() +
-    theme(panel.grid = element_blank(),
-          strip.background = element_blank()) +
-    xlab("") +
-    ylab("")
-
 
 ## Estimates for CT and TGA together
 
@@ -446,13 +419,13 @@ combined_tga_ct_fits_main_phenotypes <- filter(combined_tga_ct_fits,
 subplot_order <- match(main_tga_ct_phenotypes, unique(combined_tga_ct_fits_main_phenotypes$variable))
 
 combined_tga_ct_fits_main_phenotypes$pretty_name <- 
-    factor(combined_tga_ct_fits_main_phenotypes$pretty_name,
-           levels = unique(combined_tga_ct_fits_main_phenotypes$pretty_name)[subplot_order])
-
-combined_tga_ct_fits_main_phenotypes$pretty_name <- 
     gsub(combined_tga_ct_fits_main_phenotypes$pretty_name,
          pattern = "QCT PC1 'high density, thickness, content'",
          replacement = "QCT PC1 'high density,\nthickness, content'")
+
+combined_tga_ct_fits_main_phenotypes$pretty_name <- 
+    factor(combined_tga_ct_fits_main_phenotypes$pretty_name,
+           levels = unique(combined_tga_ct_fits_main_phenotypes$pretty_name)[subplot_order])
 
 plot_tga_estimates_main_phenotypes <- ggplot() +
     geom_pointrange(aes(colour = breed,
@@ -460,6 +433,7 @@ plot_tga_estimates_main_phenotypes <- ggplot() +
                         ymin = lwr,
                         ymax = upr,
                         x = cage.pen),
+                    size = 0.7,
                     position = position_dodge(0.5),
                     data = combined_tga_ct_fits_main_phenotypes) +
     facet_wrap(~ pretty_name, scale = "free_y", ncol = 3) +
@@ -507,6 +481,7 @@ plot_tga_contr <- qplot(x = contrast,
                         ymin = conf.low,
                         ymax = conf.high,
                         geom = "pointrange",
+                        size = I(0.7),
                         data = combined_tga_ct_contr) +
     facet_wrap(~ pretty_name, scale = "free", ncol = 2) +
     geom_hline(yintercept = 0,
@@ -520,9 +495,6 @@ plot_tga_contr <- qplot(x = contrast,
     ylab("") +
     ggtitle("Difference between housing systems (cage minus pen)")
 
-pdf("figures/plot_tga_ct_pheno.pdf", width = 8, height = 10)
-print(plot_tga_pheno)
-dev.off()
 
 pdf("figures/plot_tga_ct_coef.pdf", width = 8, height = 10)
 print(plot_tga_estimates)
