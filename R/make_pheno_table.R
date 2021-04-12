@@ -94,3 +94,13 @@ pheno <- pheno[order(pheno$animal_id),]
 
 saveRDS(pheno,
         file = "outputs/pheno.Rds")
+
+
+
+pheno <- filter(pheno, !is.na(cage.pen))
+
+write.table(pheno,
+            file = "tables/supplementary_data3_phenotypes.txt",
+            sep = "\t",
+            quote = FALSE,
+            row.names = FALSE)
