@@ -14,39 +14,29 @@ pheno <- readRDS("outputs/pheno.Rds")
 
 pheno <- filter(pheno, !is.na(cage.pen))
 
-pheno$comb_weight <- pheno$comb_g/pheno$weight
 pheno$load_weight <- pheno$load_N/pheno$weight
 
 
 ## Histograms
 
 long <- pivot_longer(pheno,
-                     c("load_N", "weight", "comb_g"),
+                     c("load_N", "weight"),
                      names_to = "variable")
 
 plot_histograms <- qplot(x = value, fill = cage.pen, data = long) +
     facet_wrap(variable ~ breed, scale = "free", ncol = 2)
 
 
-## Histograms of relative phenotypes
+## Histogram of relative load
 
-long_relative <- pivot_longer(pheno,
-                              c("comb_weight", "load_weight"),
-                              names_to = "variable")
-
-plot_relative_histograms <- qplot(x = value, fill = cage.pen, data = long_relative) +
-    facet_wrap(variable ~ breed, scale = "free", ncol = 2)
+plot_relative_histograms <- qplot(x = load_weight, fill = cage.pen, data = pheno) +
+    facet_wrap( ~ breed, scale = "free", ncol = 2)
 
 
-## Scatterplots with weight
+## Scatterplot with weight
 
-long_scatter <- pivot_longer(pheno,
-                             c("load_N", "comb_g"),
-                             names_to = "variable")
-
-
-plot_scatter <- qplot(x = weight, y = value, colour = cage.pen, data = long_scatter) +
-    facet_wrap(variable ~ breed, scale = "free") +
+plot_scatter <- qplot(x = weight, y = load_N, colour = cage.pen, data = pheno) +
+    facet_wrap( ~ breed, scale = "free") +
     geom_smooth(method = lm)
 
 
@@ -146,7 +136,9 @@ coefs_load$Term[coefs_load$term == "breedLSL"] <- "Bovans vs LSL"
 coefs_load$Term[coefs_load$term == "cage.penPEN"] <- "CAGE vs PEN"
 coefs_load$Term[coefs_load$term == "breedLSL:cage.penPEN"] <- "Interaction"
 
-plot_dots_nocomb <- ggplot() +
+
+
+plot_dots_nice <- ggplot() +
     geom_jitter(aes(x = cage.pen, colour = breed, y = value),
                 alpha = I(0.1),
                 data = long_load) +
@@ -163,7 +155,7 @@ plot_dots_nocomb <- ggplot() +
     xlab("") +
     ylab("")
 
-plot_ests_nocomb <- ggplot() +
+plot_ests_nice <- ggplot() +
     geom_pointrange(aes(x = Term,
                         y = estimate,
                         ymin = conf.low,
@@ -182,17 +174,16 @@ plot_ests_nocomb <- ggplot() +
     ylab("") +
     ggtitle("Differences")
 
-plot_trait_combined <- ggarrange(plot_dots_nocomb, plot_ests_nocomb, heights = c(0.7, 0.3))
+plot_trait_combined <- ggarrange(plot_dots_nice, plot_ests_nice, heights = c(0.7, 0.3))
 
 pdf("figures/plot_housing_breed_difference.pdf")
 print(plot_trait_combined)
 dev.off()
 
 
+## Scatterplot with weight
 
-
-
-plot_scatter_nocomb <- qplot(x = weight, y = load_N, colour = breed,
+plot_scatter_nice <- qplot(x = weight, y = load_N, colour = breed,
                              alpha = I(0.25),
                              data = pheno) +
     geom_smooth(method = lm, se = FALSE) +
@@ -226,7 +217,7 @@ plot_scatter_ests <- ggplot() +
               
 
 
-plot_scatter_combined <- ggarrange(plot_scatter_nocomb, plot_scatter_ests, heights = c(0.7, 0.3))
+plot_scatter_combined <- ggarrange(plot_scatter_nice, plot_scatter_ests, heights = c(0.7, 0.3))
 
 
 pdf("figures/plot_bw_regression.pdf")

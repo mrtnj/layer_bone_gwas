@@ -73,6 +73,8 @@ saveRDS(gwas_all_weight,
 
 
 
+## Conditional GWAS of major weight locus
+
 peak_marker <- as.character(gwas_all_weight$marker_id[which.min(gwas_all_weight$p)])
 
 X_covar <- model.matrix(~ 1 + breed + cage.pen, all_weight_covar)

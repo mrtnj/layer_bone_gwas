@@ -7,7 +7,7 @@ library(ggplot2)
 library(readr)
 library(tidyr)
 
-geno <- read_tsv("RA-1698_181010_ResultReport/RA-1698_181010_ResultReport_PCF_TOP/RA-1698_181010_SNPGenotypeExport_PCF_TOP.txt",
+geno <- read_tsv("data/RA-1698_181010_SNPGenotypeExport_PCF_TOP.txt",
                  col_types = cols(.default = "c", individual = "n"))
 
 

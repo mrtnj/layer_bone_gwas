@@ -1,3 +1,5 @@
+library(dplyr)
+library(readr)
 
 ## Collate phenotypes from all sources into one file
 
@@ -5,22 +7,21 @@
 read_data <- function(filename) {
     read.table(filename,
                header = TRUE,
-               dec = ",",
                sep = "\t")
 }
 
 ## Breaking strength
 
-breaking <- read_data("mdb_dump/breaking_strength.txt")
+breaking <- read_data("data/breaking_strength.txt")
 colnames(breaking)[2] <- "load_N"
 
 
 ## Covariates
 
-covariates <- lapply(c("mdb_dump/cage_or_pen.txt",
-                       "mdb_dump/feeds.txt",
-                       "mdb_dump/breeds.txt",
-                       "mdb_dump/groups.txt"),
+covariates <- lapply(c("data/cage_or_pen.txt",
+                       "data/feeds.txt",
+                       "data/breeds.txt",
+                       "data/groups.txt"),
                      read_data)
 
 covariates <- Reduce(full_join, covariates)
@@ -28,38 +29,19 @@ covariates <- Reduce(full_join, covariates)
 
 ## Weight
 
-weight <- read_data("mdb_dump/weights.txt")
+weight <- read_data("data/weights.txt")
 
 
-## Comb size
-
-comb <- read_data("mdb_dump/combs.txt")
-
-
-## FTIR data
-
-ftir_medullary <- read_data("mdb_dump/ftir_medullary.txt")
-ftir_cortical <- read_data("mdb_dump/ftir_cortical.txt")
-
-colnames(ftir_cortical)[2] <- "thickness_mm"
-
-colnames(ftir_medullary)[2:11] <- paste("ftir_medullary_",
-                                        colnames(ftir_medullary)[2:11],
-                                        sep = "")
-
-colnames(ftir_cortical)[2:14] <- paste("ftir_cortical_",
-                                       colnames(ftir_cortical)[2:14],
-                                       sep = "")
 
 ## pQCT data
 
-ct_distal <- read_data("mdb_dump/micro_distal_avg.txt")
+ct_distal <- read_data("data/micro_distal_avg.txt")
 
 colnames(ct_distal)[5:58] <- paste("ct_distal_",
                                    colnames(ct_distal)[5:58],
                                    sep = "")
 
-ct_mid <- read_data("mdb_dump/micro_midshaft_avg.txt")
+ct_mid <- read_data("data/micro_midshaft_avg.txt")
 
 colnames(ct_mid)[5:58] <- paste("ct_mid_",
                                 colnames(ct_mid)[5:58],
@@ -96,14 +78,12 @@ ct_pca_data <- data.frame(animal_id = ct_complete$animal_id,
 
 ## TGA data
 
-tga <- read_tsv("mdb_dump/tga.txt",
+tga <- read_tsv("data/tga.txt",
                 na = c("", "--"))
 colnames(tga) <- sub(colnames(tga), pattern = "/", replacement = "_over_")
 
 
-pheno <- Reduce(full_join, list(breaking, covariates, weight, comb,
-                                ftir_medullary,
-                                ftir_cortical,
+pheno <- Reduce(full_join, list(breaking, covariates, weight,
                                 ct,
                                 ct_pca_data,
                                 tga))

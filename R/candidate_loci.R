@@ -7,7 +7,7 @@ library(readr)
 
 ## Candidate genotypes
 
-candidate_geno <- read.table("mdb_dump/genotyping.txt",
+candidate_geno <- read.table("data/genotyping.txt",
                              header = TRUE,
                              stringsAsFactors = FALSE,
                              dec = ",",
@@ -73,9 +73,11 @@ candidate_loci$end_expanded <- candidate_loci$end + 50e3
 
 ## GWAS resuls
 
-gwas <- readRDS("outputs/gwas.Rds")
+gwas_pen_load <- readRDS("outputs/gwas_pen_load_coord.Rds")
+gwas_cage_load <- readRDS("outputs/gwas_cage_load_coord.Rds")
+gwas_all_load <- readRDS("outputs/gwas_all_load_coord.Rds")
 
-gwas_markers <- unique(gwas[, c("chr", "rs", "ps")])
+gwas_markers <- unique(gwas_all_load[, c("chr", "marker_id", "ps")])
 
 candidate_markers <- vector(mode = "list",
                             length = nrow(candidate_loci))
@@ -89,23 +91,34 @@ for (candidate_ix in 1:nrow(candidate_loci)) {
 
 }
 
-candidates <- unique(Reduce(rbind, candidate_markers)$rs)
+candidates <- unique(Reduce(rbind, candidate_markers)$marker_id)
 
 
-candidate_gwas <- filter(gwas,
-                         rs %in% candidates &
-                         scan_name %in% c("pen_load_adj", "cage_load_adj", "all_load_adj"))
+candidate_pen_load <- filter(gwas_pen_load,
+                             marker_id %in% candidates)
+
+candidate_cage_load <- filter(gwas_cage_load,
+                              marker_id %in% candidates)
+
+candidate_all_load <- filter(gwas_all_load,
+                             marker_id %in% candidates)
 
 
 
-candidate_gwas0.01 <- filter(candidate_gwas, p_wald < 1e-2)
+suggestive_candidates <- rbind(transform(filter(candidate_cage_load, p < 1e-2),
+                                         scan_name = "Bone strength (CAGE)"),
+                               transform(filter(candidate_pen_load, p < 1e-2),
+                                         scan_name = "Bone strength (PEN)"),
+                               transform(filter(candidate_all_load, p < 1e-2),
+                                         scan_name = "Bone strength (JOINT)"))
 
 
-
-candidate_table <- candidate_gwas0.01[, c("scan_name_pretty", "rs", "chr", "ps", "p_wald", "beta")]
-
-
-write.csv(candidate_table,
+write.csv(suggestive_candidates[order(as.numeric(suggestive_candidates$chr), suggestive_candidates$ps),],
           file = "tables/candidate_gwas.csv",
+          quote = FALSE,
+          row.names = FALSE)
+
+write.csv(candidate_loci[order(as.numeric(candidate_loci$chr), candidate_loci$start), 1:3],
+          file = "tables/candidate_regions.csv",
           quote = FALSE,
           row.names = FALSE)

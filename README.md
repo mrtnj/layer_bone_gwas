@@ -14,70 +14,58 @@ sequences for alignment.
 new positions.
 
 
+## Format plink files
+
+* R/make_pheno_table.R -- Collect all phenotypes in one file
+
+* R/prepare_plink_files.R -- Reads text files of genotypes and phenotypes
+to create ped and phenotype files
+
+
 ## Exploratory analysis
 
 * R/plot_genotypes.R -- QC of SNP genotypes
 
-* R/plot_phenotypes.R -- Plots and linear models of bone strenght and body weight
+* R/plot_phenotypes.R -- Plots and linear models of bone strength and body weight
 
 * R/plot_pqct_tga_phenotypes.R -- Plots and linear models of pQCT and TGA phenotypes
 
 * R/trait_modelling_functions.R -- Helper functions
 
 
-## Format plink files for GEMMA
+## Run quantitative genetics and GWAS with hglm
 
-* R/make_pheno_table.R -- Collect all phenotypes in one file
+* scripts/convert_bed.sh -- Convert binary plink files for GEMMA
 
-* R/prepare_plink_files.R -- Reads text files of genotypes and phenotypes
-to create ped and phenotype files for GEMMA.
+* script/gemma_grm.sh -- Estimate GRM with GEMMA
 
-* scripsts/convert_bed.sh -- Use plink to convert binary files for GEMMA.
+* R/hglm_gwas_prepare_data.R -- Set up data for main bone and body weight GWAS
 
+* R/hglm_gwas.R -- Main GWAS analysis of bone and body weight
 
-## Run GEMMA for GWAS
+* R/hglm_gwas_tga_prepare_data.R -- Set up data for QCT and TGA GWAS
 
-* scripts/gemma_grm.sh -- Create genomic relationship matrix
+* R/hglm_gwas_tga.R -- QCT and TGA GWAS
 
-* scripts/gemma_gwas.sh -- Run GWAS
+* R/hglm_models.R -- Quantitative genetics models with hglm
+
+* R/hglm_models_tga.R -- Quantitative genetics models for QCT and TGA
 
 
 ## GWAS results
 
-* R/gwas_summary.R -- Summarise and visualise results
+* R/hglm_gwas_summary.R -- Summarise main GWAS results
 
-* R/gwas_overlap.R -- Investigate overlaps between GWAS for different traits and genes
+* R/hglm_gwas_summary_pqct_tga.R -- Summarise QCT and TGA GWAS
 
+* R/hglm_gwas_overlap.R -- Overlap GWAS results between traits
 
-## Conditional GWAS on the body mass loci on chr4
-
-* R/prepare_conditional_gwas.R -- Make covariate files for conditional GWAS
-
-* scripts/conditional_gwas.sh -- Run conditional GWAS
-
-* R/conditional_gwas_summary.R -- Summarise results of conditional GWAS
-
-
-## Soundness check of body weight covariate for GWAS
-
-* script/unadjusted_load_gwas.sh -- Run the breaking strength GWAS without body weight covarite, to check if this does indeed detect he body weight loci
-
-* R/unadjusted_load_gwas_summary.R -- Summarise results of soundness check
+* R/candidate_loci.R -- Look at candidate loci
 
 
 ## Run GCTA for genomic correlations
 
+* R/genomic_correlation_prepare_files.R -- Prepare data for genomic correlation with GCTA
+
 * scripts/genomic_correlation_gcta.sh -- Run bivariate genomic model with GCTA
 
-
-## Simulations
-
-* R/simulation_shared.R -- Fake data simulation for shared genetic architecture
-
-* R/simulation_gxe.R -- Fake data simulation for GxE
-
-* scripts/simulated_gwas.sh -- Run GWAS on simulated data
-
-* scripts/simulated_gwas_gxe.sh -- Run GWAS on simulated data with GxE
-
-* R/simulation_results.R -- Summarise results

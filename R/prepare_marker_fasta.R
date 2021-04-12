@@ -7,7 +7,7 @@ library(readr)
 
 
 
-annotation <- read_csv("RA-1698_181010_ResultReport/Chicken_50K_CobbCons_15000986_A.csv",
+annotation <- read_csv("data/Chicken_50K_CobbCons_15000986_A.csv",
                        skip = 7)
 
 

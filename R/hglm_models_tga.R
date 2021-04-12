@@ -13,6 +13,8 @@ source("R/hglm_helper_functions.R")
 source("R/hglm_gwas_tga_prepare_data.R")
 
 
+
+
 pen_models <- mapply(function(data, covar, Z_grm, Z_group) {
     
     hglm(y = data$data$X6,
@@ -88,10 +90,9 @@ pretty_trait_names <- rbind(data.frame(name = c("ct_pc1", "ct_pc2", "ct_pc3"),
                                        pretty_name = c("pQCT PC1 'high density, thickness, content'",
                                                        "pQCT PC2 'long bone length'",
                                                        "pQCT PC3 'low cortical density'")),
-                                       read_csv("pretty_trait_names_tga.csv"))
+                                       read_csv("pretty_trait_names_tga.csv")[,1:2])
 
 results <- inner_join(results, pretty_trait_names)
-
 
 write.csv(results,
           file = "tables/table_bone_phenotype_h2.csv",
