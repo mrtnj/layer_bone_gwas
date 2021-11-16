@@ -22,9 +22,10 @@ for CHR in 28; do
      plink --file gwas/all \
            --chr $CHR \
            --recode \
-           -- allow-extra-chr \
-           --make-bed \
-           --out gwas/phased/input/chr$CHR ;
+           --allow-extra-chr \
+           --chr-set 40 \
+           --geno 0.1 \
+           --out gwas/phasing/input/chr$CHR ;
 done 
 
 
@@ -34,7 +35,7 @@ cd gwas/phasing
 for CHR in 28; do
 
     shapeit \
-        --input-bed input/chr$CHR.ped input/chr$CHR.bim input/chr$CHR.fam \
+        --input-ped input/chr$CHR.ped input/chr$CHR.map
         --output-max output/chr$CHR.phased.haps chr$CHR.phased.sample \
         --input-map ../../annotation/elferink2010_shapeit_GRCg6a/chr$CHR.txt \
         --effective-size 1000 \
