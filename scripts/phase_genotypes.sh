@@ -16,9 +16,8 @@ if [ ! -d gwas/phasing/output ]; then
     mkdir gwas/phasing/output
 fi
 
-## {1..28} 30 31 32 33
 
-for CHR in 28; do
+for CHR in {1..28} 30 31 32 33; do
      plink --file gwas/all \
            --chr $CHR \
            --recode \
@@ -32,11 +31,11 @@ done
 cd gwas/phasing
 
 
-for CHR in 28; do
+for CHR in {1..28} 30 31 32 33; do
 
     shapeit \
         --input-ped input/chr$CHR.ped input/chr$CHR.map
-        --output-max output/chr$CHR.phased.haps chr$CHR.phased.sample \
+        --output-max output/chr$CHR.phased.haps output/chr$CHR.phased.sample \
         --input-map ../../annotation/elferink2010_shapeit_GRCg6a/chr$CHR.txt \
         --effective-size 1000 \
         --thread 8
