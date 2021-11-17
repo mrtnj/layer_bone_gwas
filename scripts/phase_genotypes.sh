@@ -18,7 +18,7 @@ if [ ! -d gwas/phasing/output ]; then
 fi
 
 
-for CHR in {1..28} 30 31 32 33; do
+for CHR in {1...15} {17..28} 30 31 32 33; do
      plink --file gwas/all \
            --chr $CHR \
            --recode \
@@ -32,7 +32,7 @@ done
 cd gwas/phasing
 
 
-for CHR in {1..28} 30 31 32 33; do
+for CHR in {1...15} {17..28} 30 31 32 33; do
 
     shapeit \
         --input-ped input/chr$CHR.ped input/chr$CHR.map \
