@@ -32,7 +32,9 @@ done
 cd gwas/phasing
 
 
-for CHR in {1...15} {17..28} 30 31 32 33; do
+## Phasing with map
+
+for CHR in {1...15} {17..28}; do
 
     shapeit \
         --input-ped input/chr$CHR.ped input/chr$CHR.map \
@@ -43,6 +45,14 @@ for CHR in {1...15} {17..28} 30 31 32 33; do
         
 done
     
+## Phasing without map
 
+for CHR in 16 {30..33}; do
 
-
+    shapeit \
+        --input-ped input/chr$CHR.ped input/chr$CHR.map \
+        --output-max output/chr$CHR.phased.haps output/chr$CHR.phased.sample \
+        --effective-size 1000 \
+        --thread 8
+        
+done
