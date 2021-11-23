@@ -4,6 +4,8 @@
 
 library(dplyr)
 library(ggplot2)
+library(patchwork)
+library(purrr)
 library(readr)
 library(tidyr)
 
@@ -174,3 +176,31 @@ plot_pcs_pen <- qplot(x = component, y = value, colour = pen.cage, data = long_p
 pdf("figures/plot_pcs.pdf")
 print(plot_pc12_pruned)
 dev.off()
+
+
+
+## Between breed comparison of allele frequency
+
+LSL_ids <- na.exclude(pheno$animal_id[pheno$breed == "LSL"])
+bovans_ids <- na.exclude(pheno$animal_id[pheno$breed == "Bovans"])
+
+
+geno_LSL <- filter(segregating, individual %in% LSL_ids)
+
+geno_bovans <- filter(segregating, individual %in% bovans_ids)
+
+
+
+nonmissing_LSL <- map_dbl(geno_LSL[, -1], function(g) sum(!is.na(g)))
+
+nonmissing_bovans <- map_dbl(geno_bovans[, -1], function(g) sum(!is.na(g)))
+
+
+f_LSL <- colSums(geno_LSL[, -1], na.rm = TRUE)/2/nonmissing_LSL
+
+f_bovans <- colSums(geno_bovans[, -1], na.rm = TRUE)/2/nonmissing_bovans
+
+
+plot_frequency_comparion <- qplot(x = f_bovans,
+                                  y = f_LSL) /
+  qplot(x = f_bovans - f_LSL)
