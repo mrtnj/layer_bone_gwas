@@ -2,8 +2,9 @@
 ## Plot summaries of haplotypes and allele frequencies
 
 library(assertthat)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
+library(patchwork)
 library(purrr)
 library(readr)
 library(tibble)
@@ -204,6 +205,8 @@ haplotype_sharing10 <- pmap(list(hap_stats_LSL = haps10_stats_LSL,
                             compare_haplotype_sharing)
 
 
+plot_sharing <- qplot(x = unlist(haplotype_sharing10))
+
 
 ## Comparison of the frequency of each haplotype
 
@@ -240,3 +243,12 @@ compare_haplotype_frequency <- function(hap_stats_LSL,
 frequency_difference10 <- pmap(list(hap_stats_LSL = haps10_stats_LSL,
                                     hap_stats_bovans = haps10_stats_bovans),
                                compare_haplotype_frequency)
+
+
+frequency_difference_df <- Reduce(rbind, flatten(frequency_difference10))
+
+
+plot_frequency_difference <- qplot(x = freq_bovans, y = freq_LSL, data = frequency_difference_df) /
+    qplot(x = bovans_minus_LSL, data = frequency_difference_df)
+
+cor(frequency_difference_df$freq_bovans, frequency_difference_df$freq_LSL)
