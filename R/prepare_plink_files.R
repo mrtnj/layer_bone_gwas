@@ -20,6 +20,36 @@ cage <- filter(pheno,
                cage.pen == "CAGE" &
                !is.na(breed))
 
+pen <- filter(pheno,
+              cage.pen == "PEN" &
+                  !is.na(breed))
+
+bovans <- filter(pheno,
+                 !is.na(cage.pen) &
+                     breed == "Bovans")
+
+LSL <- filter(pheno,
+              !is.na(cage.pen) &
+                  breed == "LSL")
+
+pen_bovans <- filter(pheno,
+                     cage.pen == "PEN" &
+                         breed == "Bovans")
+
+pen_LSL <- filter(pheno,
+                  cage.pen == "PEN" &
+                      breed == "LSL")
+
+cage_bovans <- filter(pheno,
+                      cage.pen == "CAGE" &
+                          breed == "Bovans")
+
+cage_LSL <- filter(pheno,
+                   cage.pen == "CAGE" &
+                       breed == "LSL")
+
+
+
 
 geno <- read_tsv("data/RA-1698_181010_SNPGenotypeExport_PCF_TOP.txt",
                  col_types = cols(.default = "c", individual = "n"))
@@ -75,10 +105,21 @@ saveRDS(geno_all,
         file = "outputs/geno_all.Rds")
 
 
+geno_all_bovans <- geno_compound[na.exclude(match(bovans$animal_id, geno_compound$individual)),]
+geno_all_LSL <- geno_compound[na.exclude(match(LSL$animal_id, geno_compound$individual)),]
+
+
+
 ## Subset genotypes based on pen/cage
 
 geno_pen <- geno_compound[na.exclude(match(pen$animal_id, geno_compound$individual)),]
 geno_cage <- geno_compound[na.exclude(match(cage$animal_id, geno_compound$individual)),]
+
+geno_pen_bovans <- geno_compound[na.exclude(match(pen_bovans$animal_id, geno_compound$individual)),]
+geno_cage_bovans <- geno_compound[na.exclude(match(cage_bovans$animal_id, geno_compound$individual)),]
+
+geno_pen_LSL <- geno_compound[na.exclude(match(pen_LSL$animal_id, geno_compound$individual)),]
+geno_cage_LSL <- geno_compound[na.exclude(match(cage_LSL$animal_id, geno_compound$individual)),]
 
 
 
@@ -93,6 +134,25 @@ cage_genotyped <- filter(cage,
                          animal_id %in% geno_cage$individual)
 
 
+all_bovans_genotyped <- filter(bovans,
+                               animal_id %in% geno_all_bovans$individual)
+
+all_LSL_genotyped <- filter(LSL,
+                            animal_id %in% geno_all_LSL$individual)
+
+
+pen_bovans_genotyped <- filter(pen_bovans,
+                               animal_id %in% geno_pen_bovans$individual)
+cage_bovans_genotyped <- filter(cage_bovans,
+                                animal_id %in% geno_cage_bovans$individual)
+
+
+pen_LSL_genotyped <- filter(pen_LSL,
+                            animal_id %in% geno_pen_LSL$individual)
+cage_LSL_genotyped <- filter(cage_LSL,
+                                animal_id %in% geno_cage_LSL$individual)
+
+
 
 ## Check ids
 assert_that(identical(all_genotyped$animal_id,
@@ -103,10 +163,26 @@ assert_that(identical(pen_genotyped$animal_id,
 assert_that(identical(cage_genotyped$animal_id,
                       geno_cage$individual))
 
+assert_that(identical(all_bovans_genotyped$animal_id,
+                      geno_all_bovans$individual))
+assert_that(identical(all_LSL_genotyped$animal_id,
+                      geno_all_LSL$individual))
+
+
+assert_that(identical(pen_bovans_genotyped$animal_id,
+                      geno_pen_bovans$individual))
+assert_that(identical(cage_bovans_genotyped$animal_id,
+                      geno_cage_bovans$individual))
+
+assert_that(identical(pen_LSL_genotyped$animal_id,
+                      geno_pen_LSL$individual))
+assert_that(identical(cage_LSL_genotyped$animal_id,
+                      geno_cage_LSL$individual))
+
 
 ## Traits of interest
 
-traits <- c("load_N", "weight", "comb_g",
+traits <- c("load_N", "weight", 
             "ct_pc1", "ct_pc2", "ct_pc3",
             "WaterLost_CB", "OMLost_CB", "CO2Lost_CB",
             "Phosphates_CB", "Mineral_CB",
@@ -140,6 +216,28 @@ for (trait_ix in 1:length(traits)) {
     
 }
 
+traits_breed <- traits[1:2]
+
+for (trait_ix in 1:length(traits_breed)) {
+    
+    fam_pen_bovans <- fam(pen_bovans_genotyped, traits[trait_ix])
+    write_plink(fam_pen_bovans,
+                paste("gwas/fam_pen_bovans_", traits[trait_ix], ".fam", sep = ""))
+    
+    fam_cage_bovans <- fam(cage_bovans_genotyped, traits[trait_ix])
+    write_plink(fam_cage_bovans,
+                paste("gwas/fam_cage_bovans_", traits[trait_ix], ".fam", sep = ""))
+    
+    fam_pen_LSL <- fam(pen_LSL_genotyped, traits[trait_ix])
+    write_plink(fam_pen_bovans,
+                paste("gwas/fam_pen_LSL_", traits[trait_ix], ".fam", sep = ""))
+    
+    fam_cage_LSL <- fam(cage_LSL_genotyped, traits[trait_ix])
+    write_plink(fam_cage_LSL,
+                paste("gwas/fam_cage_LSL_", traits[trait_ix], ".fam", sep = ""))
+    
+}
+
 
 
 ## Create ped files
@@ -155,9 +253,17 @@ ped <- function(df) data.frame(fid = df$individual,
 
 ped_all <- ped(geno_all)
 
+ped_all_bovans <- ped(geno_all_bovans)
+ped_all_LSL <- ped(geno_all_LSL)
+
 ped_pen <- ped(geno_pen)
 ped_cage <- ped(geno_cage)
 
+ped_pen_bovans <- ped(geno_pen_bovans)
+ped_cage_bovans <- ped(geno_cage_bovans)
+
+ped_pen_LSL <- ped(geno_pen_LSL)
+ped_cage_LSL <- ped(geno_cage_LSL)
 
 
 ## Create covariate tables
@@ -215,6 +321,15 @@ write_plink(covar_cage_weight, "gwas/covar_cage_weight.txt")
 
 write_ped(ped_all, "gwas/all.ped")
 
+write_ped(ped_all_bovans, "gwas/all_bovans.ped")
+write_ped(ped_all_LSL, "gwas/all_LSL.ped")
+
 write_ped(ped_pen, "gwas/pen.ped")
 write_ped(ped_cage, "gwas/cage.ped")
+
+write_ped(ped_pen_bovans, "gwas/pen_bovans.ped")
+write_ped(ped_cage_bovans, "gwas/cage_bovans.ped")
+
+write_ped(ped_pen_LSL, "gwas/pen_LSL.ped")
+write_ped(ped_cage_LSL, "gwas/cage_LSL.ped")
 
