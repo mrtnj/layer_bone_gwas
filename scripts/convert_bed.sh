@@ -56,9 +56,9 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
-		  --file gwas/all_LSL \
+		  --file gwas/all_lsl \
 		  --make-bed \
-		  --out gwas/all_LSL \
+		  --out gwas/all_lsl \
 		  --maf 0.0001	
 
 $PLINK_PATH/plink --allow-extra-chr \

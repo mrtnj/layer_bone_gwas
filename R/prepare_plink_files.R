@@ -230,11 +230,11 @@ for (trait_ix in 1:length(traits_breed)) {
     
     fam_pen_LSL <- fam(pen_LSL_genotyped, traits[trait_ix])
     write_plink(fam_pen_bovans,
-                paste("gwas/fam_pen_LSL_", traits[trait_ix], ".fam", sep = ""))
+                paste("gwas/fam_pen_lsl_", traits[trait_ix], ".fam", sep = ""))
     
     fam_cage_LSL <- fam(cage_LSL_genotyped, traits[trait_ix])
     write_plink(fam_cage_LSL,
-                paste("gwas/fam_cage_LSL_", traits[trait_ix], ".fam", sep = ""))
+                paste("gwas/fam_cage_lsl_", traits[trait_ix], ".fam", sep = ""))
     
 }
 
@@ -322,7 +322,7 @@ write_plink(covar_cage_weight, "gwas/covar_cage_weight.txt")
 write_ped(ped_all, "gwas/all.ped")
 
 write_ped(ped_all_bovans, "gwas/all_bovans.ped")
-write_ped(ped_all_LSL, "gwas/all_LSL.ped")
+write_ped(ped_all_LSL, "gwas/all_lslL.ped")
 
 write_ped(ped_pen, "gwas/pen.ped")
 write_ped(ped_cage, "gwas/cage.ped")
@@ -330,6 +330,6 @@ write_ped(ped_cage, "gwas/cage.ped")
 write_ped(ped_pen_bovans, "gwas/pen_bovans.ped")
 write_ped(ped_cage_bovans, "gwas/cage_bovans.ped")
 
-write_ped(ped_pen_LSL, "gwas/pen_LSL.ped")
-write_ped(ped_cage_LSL, "gwas/cage_LSL.ped")
+write_ped(ped_pen_LSL, "gwas/pen_lsl.ped")
+write_ped(ped_cage_LSL, "gwas/cage_lsl.ped")
 
