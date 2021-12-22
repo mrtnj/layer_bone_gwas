@@ -322,7 +322,7 @@ write_plink(covar_cage_weight, "gwas/covar_cage_weight.txt")
 write_ped(ped_all, "gwas/all.ped")
 
 write_ped(ped_all_bovans, "gwas/all_bovans.ped")
-write_ped(ped_all_LSL, "gwas/all_lslL.ped")
+write_ped(ped_all_LSL, "gwas/all_lsl.ped")
 
 write_ped(ped_pen, "gwas/pen.ped")
 write_ped(ped_cage, "gwas/cage.ped")

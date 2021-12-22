@@ -8,18 +8,18 @@ set -eu
 
 cd gwas
 
-ln -s map.map all.map
-ln -s map.map cage.map
-ln -s map.map pen.map
+#ln -s map.map all.map
+#ln -s map.map cage.map
+#ln -s map.map pen.map
 
-ln -s map.map all_bovans.map
-ln -s map.map all_lsl.map
+#ln -s map.map all_bovans.map
+#ln -s map.map all_lsl.map
 
-ln -s map.map pen_bovans.map
-ln -s map.map pen_lsl.map
+#ln -s map.map pen_bovans.map
+#ln -s map.map pen_lsl.map
 
-ln -s map.map cage_bovans.map
-ln -s map.map cage_lsl.map
+#ln -s map.map cage_bovans.map
+#ln -s map.map cage_lsl.map
 
 cd ..
 
@@ -77,15 +77,15 @@ $PLINK_PATH/plink --allow-extra-chr \
 
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
-		  --file gwas/pen_LSL \
+		  --file gwas/pen_lsl \
 		  --make-bed \
-		  --out gwas/pen_LSL \
+		  --out gwas/pen_lsl \
 		  --maf 0.0001		  
 
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
-		  --file gwas/cage_LSL \
+		  --file gwas/cage_lsl \
 		  --make-bed \
-		  --out gwas/cage_LSL \
+		  --out gwas/cage_lsl \
 		  --maf 0.0001		  
 
