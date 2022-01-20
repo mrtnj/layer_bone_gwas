@@ -2,32 +2,32 @@
 
 ## Get data
 
-pen_bovans_load <- read_data("gwas/pen_bovans_load_N/pen_bovans_load_N.fam")
-cage_bovans_load <- read_data("gwas/cage_bovans_load_N/cage_bovans_load_N.fam")
-all_bovans_load <- read_data("gwas/all_bovans_load_N/all_bovans_load_N.fam")
+pen_bovans_load <- read_data("gwas/fam_pen_bovans_load_N.fam")
+cage_bovans_load <- read_data("gwas/fam_cage_bovans_load_N.fam")
+all_bovans_load <- read_data("gwas/fam_all_bovans_load_N.fam")
 
-pen_lsl_load <- read_data("gwas/pen_lsl_load_N/pen_lsl_load_N.fam")
-cage_lsl_load <- read_data("gwas/cage_lsl_load_N/cage_lsl_load_N.fam")
-all_lsl_load <- read_data("gwas/all_lsl_load_N/all_lsl_load_N.fam")
+pen_lsl_load <- read_data("gwas/fam_pen_lsl_load_N.fam")
+cage_lsl_load <- read_data("gwas/fam_cage_lsl_load_N.fam")
+all_lsl_load <- read_data("gwas/fam_all_lsl_load_N.fam")
 
-pen_bovans_weight <- read_data("gwas/pen_bovans_load_N/pen_bovans_load_N.fam")
-cage_bovans_weight <- read_data("gwas/cage_bovans_load_N/cage_bovans_load_N.fam")
-all_bovans_weight <- read_data("gwas/all_bovans_load_N/all_bovans_load_N.fam")
+pen_bovans_weight <- read_data("gwas/fam_pen_bovans_load_N.fam")
+cage_bovans_weight <- read_data("gwas/fam_cage_bovans_load_N.fam")
+all_bovans_weight <- read_data("gwas/fam_all_bovans_load_N.fam")
 
-pen_lsl_weight <- read_data("gwas/pen_lsl_weight/pen_lsl_weight.fam")
-cage_lsl_weight <- read_data("gwas/cage_lsl_weight/cage_lsl_weight.fam")
-all_lsl_weight <- read_data("gwas/all_lsl_weight/all_lsl_weight.fam")
+pen_lsl_weight <- read_data("gwas/fam_pen_lsl_weight.fam")
+cage_lsl_weight <- read_data("gwas/fam_cage_lsl_weight.fam")
+all_lsl_weight <- read_data("gwas/fam_all_lsl_weight.fam")
 
 
 
 ## Load GRM from Gemma and decompose
 
-pen_bovans_GRM <- read_tsv("gwas/output/pen_bovans_grm.sXX.txt", col_names = FALSE)
-cage_bovans_GRM <- read_tsv("gwas/output/cage_bovans_grm.sXX.txt", col_names = FALSE)
+pen_bovans_GRM <- read_tsv("gwas/output/bovans_pen_grm.sXX.txt", col_names = FALSE)
+cage_bovans_GRM <- read_tsv("gwas/output/bovans_cage_grm.sXX.txt", col_names = FALSE)
 all_bovans_GRM <- read_tsv("gwas/output/all_bovans_grm.sXX.txt", col_names = FALSE)
 
-pen_lsl_GRM <- read_tsv("gwas/output/pen_lsl_grm.sXX.txt", col_names = FALSE)
-cage_lsl_GRM <- read_tsv("gwas/output/cage_lsl_grm.sXX.txt", col_names = FALSE)
+pen_lsl_GRM <- read_tsv("gwas/output/lsl_pen_grm.sXX.txt", col_names = FALSE)
+cage_lsl_GRM <- read_tsv("gwas/output/lsl_cage_grm.sXX.txt", col_names = FALSE)
 all_lsl_GRM <- read_tsv("gwas/output/all_lsl_grm.sXX.txt", col_names = FALSE)
 
 
@@ -195,17 +195,17 @@ assert_that(identical(geno_pen_bovans_weight$FID, pen_bovans_weight$data$X1))
 geno_cage_bovans <- read_delim("gwas/cage_bovans.raw",
                                delim = " ")
 
-geno_cage_bovans_load <- geno_cage_bovans[match(cage_bovans_load$data$X1, geno_bovans_cage$FID),]
+geno_cage_bovans_load <- geno_cage_bovans[match(cage_bovans_load$data$X1, geno_cage_bovans$FID),]
 assert_that(identical(geno_cage_bovans_load$FID, cage_bovans_load$data$X1))
 
-geno_cage_bovans_weight <- geno_cage_bovans[match(cage_bovans_weight$data$X1, geno_bovans_cage$FID),]
+geno_cage_bovans_weight <- geno_cage_bovans[match(cage_bovans_weight$data$X1, geno_cage_bovans$FID),]
 assert_that(identical(geno_cage_bovans_weight$FID, cage_bovans_weight$data$X1))
 
 
 geno_all_bovans <- read_delim("gwas/all_bovans.raw",
                               delim = " ")
 
-geno_all_bovans_load <- geno_all_bovans[match(all_bovans_load$data$X1, geno_bovans_all$FID),]
+geno_all_bovans_load <- geno_all_bovans[match(all_bovans_load$data$X1, geno_all_bovans$FID),]
 assert_that(identical(geno_all_bovans_load$FID, all_bovans_load$data$X1))
 
 geno_all_bovans_weight <- geno_all_bovans[match(all_bovans_weight$data$X1, geno_all_bovans$FID),]
@@ -218,24 +218,24 @@ geno_pen_lsl <- read_delim("gwas/pen_lsl.raw",
 geno_pen_lsl_load <- geno_pen_lsl[match(pen_lsl_load$data$X1, geno_pen_lsl$FID),]
 assert_that(identical(geno_pen_lsl_load$FID, pen_lsl_load$data$X1))
 
-geno_pen_lsl_weight <- geno_pen_lsl[match(pen_lsl_weight$data$X1, geno_lsl_bovans$FID),]
+geno_pen_lsl_weight <- geno_pen_lsl[match(pen_lsl_weight$data$X1, geno_pen_lsl$FID),]
 assert_that(identical(geno_pen_lsl_weight$FID, pen_lsl_weight$data$X1))
 
 
 geno_cage_lsl <- read_delim("gwas/cage_lsl.raw",
                                delim = " ")
 
-geno_cage_lsl_load <- geno_cage_lsl[match(cage_lsl_load$data$X1, geno_lsl_cage$FID),]
+geno_cage_lsl_load <- geno_cage_lsl[match(cage_lsl_load$data$X1, geno_cage_lsl$FID),]
 assert_that(identical(geno_cage_lsl_load$FID, cage_lsl_load$data$X1))
 
-geno_cage_lsl_weight <- geno_cage_lsl[match(cage_lsl_weight$data$X1, geno_lsl_cage$FID),]
+geno_cage_lsl_weight <- geno_cage_lsl[match(cage_lsl_weight$data$X1, geno_cage_lsl$FID),]
 assert_that(identical(geno_cage_lsl_weight$FID, cage_lsl_weight$data$X1))
 
 
 geno_all_lsl <- read_delim("gwas/all_lsl.raw",
                            delim = " ")
 
-geno_all_lsl_load <- geno_all_lsl[match(all_lsl_load$data$X1, geno_lsl_all$FID),]
+geno_all_lsl_load <- geno_all_lsl[match(all_lsl_load$data$X1, geno_all_lsl$FID),]
 assert_that(identical(geno_all_lsl_load$FID, all_lsl_load$data$X1))
 
 geno_all_lsl_weight <- geno_all_lsl[match(all_lsl_weight$data$X1, geno_all_lsl$FID),]

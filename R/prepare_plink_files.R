@@ -220,6 +220,10 @@ traits_breed <- traits[1:2]
 
 for (trait_ix in 1:length(traits_breed)) {
     
+    fam_all_bovans <- fam(all_bovans_genotyped, traits[trait_ix])
+    write_plink(fam_all_bovans,
+                paste("gwas/fam_all_bovans_", traits[trait_ix], ".fam", sep = ""))
+    
     fam_pen_bovans <- fam(pen_bovans_genotyped, traits[trait_ix])
     write_plink(fam_pen_bovans,
                 paste("gwas/fam_pen_bovans_", traits[trait_ix], ".fam", sep = ""))
@@ -228,8 +232,12 @@ for (trait_ix in 1:length(traits_breed)) {
     write_plink(fam_cage_bovans,
                 paste("gwas/fam_cage_bovans_", traits[trait_ix], ".fam", sep = ""))
     
+    fam_all_LSL <- fam(all_LSL_genotyped, traits[trait_ix])
+    write_plink(fam_all_LSL,
+                paste("gwas/fam_all_lsl_", traits[trait_ix], ".fam", sep = ""))
+    
     fam_pen_LSL <- fam(pen_LSL_genotyped, traits[trait_ix])
-    write_plink(fam_pen_bovans,
+    write_plink(fam_pen_LSL,
                 paste("gwas/fam_pen_lsl_", traits[trait_ix], ".fam", sep = ""))
     
     fam_cage_LSL <- fam(cage_LSL_genotyped, traits[trait_ix])

@@ -60,6 +60,22 @@ prune_snp_matrix <- function(snp_matrix) {
     
 }
 
+## Make variance covariance matrix V
+
+make_V_matrix <- function(Z, RandC, ratio) {
+    n_obs <- nrow(Z)
+    n_components <- length(ratio)
+    V <- diag(n_obs)
+    
+    start <- c(1, cumsum(RandC)[-length(RandC)] + 1)
+    end <- cumsum(RandC)
+    for (ix in 1:n_components) {
+        Z_component <- Z[, start[ix]:end[ix]]
+        V <- V + tcrossprod(Z_component) * ratio[ix]
+    }
+    V
+}
+
 ## Run GWAS
 
 run_gwas <- function(pheno,
@@ -81,9 +97,9 @@ run_gwas <- function(pheno,
     
     ratio <- model_baseline$varRanef/model_baseline$varFix
     
-    V <- RepeatABEL::constructV(Z,
-                                RandC,
-                                ratio)
+    V <- make_V_matrix(Z,
+                       RandC,
+                       ratio)
     
     eigV <- eigen(V)
     
