@@ -10,9 +10,9 @@ pen_lsl_load <- read_data("gwas/fam_pen_lsl_load_N.fam")
 cage_lsl_load <- read_data("gwas/fam_cage_lsl_load_N.fam")
 all_lsl_load <- read_data("gwas/fam_all_lsl_load_N.fam")
 
-pen_bovans_weight <- read_data("gwas/fam_pen_bovans_load_N.fam")
-cage_bovans_weight <- read_data("gwas/fam_cage_bovans_load_N.fam")
-all_bovans_weight <- read_data("gwas/fam_all_bovans_load_N.fam")
+pen_bovans_weight <- read_data("gwas/fam_pen_bovans_weight.fam")
+cage_bovans_weight <- read_data("gwas/fam_cage_bovans_weight.fam")
+all_bovans_weight <- read_data("gwas/fam_all_bovans_weight.fam")
 
 pen_lsl_weight <- read_data("gwas/fam_pen_lsl_weight.fam")
 cage_lsl_weight <- read_data("gwas/fam_cage_lsl_weight.fam")
