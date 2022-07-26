@@ -160,7 +160,7 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  --maf 0.0001 \
 		  --chr 1-28
 
-$GCTA_PATH/gcta64 --bfile genomic_correlation/weight_bovans/all_lsl \
+$GCTA_PATH/gcta64 --bfile genomic_correlation/weight_lsl/all_lsl \
 		  --make-grm-bin \
 		  --make-grm-alg 1 \
 		  --out genomic_correlation/weight_lsl/gcta \
