@@ -15,7 +15,7 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  --maf 0.0001 \
 		  --chr 1-28
 
-$GCTA_PATH/gcta64 --bfile genomic_correlation/all \
+$GCTA_PATH/gcta64 --bfile genomic_correlation/load_N/all \
 		  --make-grm-bin \
 		  --make-grm-alg 1 \
 		  --out genomic_correlation/load_N/gcta \
@@ -54,6 +54,12 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  --maf 0.0001 \
 		  --chr 1-28
 		  
+$GCTA_PATH/gcta64 --bfile genomic_correlation/load_N_bovans/all_bovans \
+		  --make-grm-bin \
+		  --make-grm-alg 1 \
+		  --out genomic_correlation/load_N_bovans/gcta \
+		  --autosome-num 28 --autosome
+		  
 $GCTA_PATH/gcta64 --reml-bivar \
 		  --grm-bin genomic_correlation/load_N_bovans/gcta \
 		  --pheno genomic_correlation/load_N_bovans/pheno.txt \
@@ -70,6 +76,12 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  --out genomic_correlation/load_N_lsl/all_lsl \
 		  --maf 0.0001 \
 		  --chr 1-28
+		  
+$GCTA_PATH/gcta64 --bfile genomic_correlation/load_N_lsl/all_lsl \
+		  --make-grm-bin \
+		  --make-grm-alg 1 \
+		  --out genomic_correlation/load_N_lsl/gcta \
+		  --autosome-num 28 --autosome
 		  
 $GCTA_PATH/gcta64 --reml-bivar \
 		  --grm-bin genomic_correlation/load_N_lsl/gcta \
@@ -89,7 +101,7 @@ $PLINK_PATH/plink --allow-extra-chr \
 		  --maf 0.0001 \
 		  --chr 1-28
 
-$GCTA_PATH/gcta64 --bfile genomic_correlation/all \
+$GCTA_PATH/gcta64 --bfile genomic_correlation/weight/all \
 		  --make-grm-bin \
 		  --make-grm-alg 1 \
 		  --out genomic_correlation/weight/gcta \
