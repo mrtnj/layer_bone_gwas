@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PLINK_PATH=~/tools/plink/
-GCTA_PATH=~/tools/gcta/gcta_1.93.0beta_mac/bin/
+GCTA_PATH=~/tools/gcta/
 
 set -eu
 
@@ -17,6 +17,7 @@ $PLINK_PATH/plink --allow-extra-chr \
 
 $GCTA_PATH/gcta64 --bfile genomic_correlation/all \
 		  --make-grm-bin \
+		  --make-grm-alg 1 \
 		  --out genomic_correlation/load_N/gcta \
 		  --autosome-num 28 --autosome
 
@@ -41,6 +42,41 @@ $GCTA_PATH/gcta64 --reml-bivar \
 		  --qcovar genomic_correlation/load_N/qc.txt \
 		  --covar genomic_correlation/load_N/cc.txt \
 		  --out genomic_correlation/load_N/gcta_bivar
+		  
+		  
+## Bovans load
+
+$PLINK_PATH/plink --allow-extra-chr \
+		  --chr-set 40 \
+		  --file gwas/all_bovans \
+		  --make-bed \
+		  --out genomic_correlation/load_N_bovans/all_bovans \
+		  --maf 0.0001 \
+		  --chr 1-28
+		  
+$GCTA_PATH/gcta64 --reml-bivar \
+		  --grm-bin genomic_correlation/load_N_bovans/gcta \
+		  --pheno genomic_correlation/load_N_bovans/pheno.txt \
+		  --qcovar genomic_correlation/load_N_bovans/qc.txt \
+		  --out genomic_correlation/load_N_bovans/gcta_bivar
+		  
+		  
+## LSL load
+
+$PLINK_PATH/plink --allow-extra-chr \
+		  --chr-set 40 \
+		  --file gwas/all_lsl \
+		  --make-bed \
+		  --out genomic_correlation/load_N_lsl/all_lsl \
+		  --maf 0.0001 \
+		  --chr 1-28
+		  
+$GCTA_PATH/gcta64 --reml-bivar \
+		  --grm-bin genomic_correlation/load_N_lsl/gcta \
+		  --pheno genomic_correlation/load_N_lsl/pheno.txt \
+		  --qcovar genomic_correlation/load_N_lsl/qc.txt \
+		  --out genomic_correlation/load_N_lsl/gcta_bivar
+		  
 
 
 ## Weight
@@ -55,6 +91,7 @@ $PLINK_PATH/plink --allow-extra-chr \
 
 $GCTA_PATH/gcta64 --bfile genomic_correlation/all \
 		  --make-grm-bin \
+		  --make-grm-alg 1 \
 		  --out genomic_correlation/weight/gcta \
 		  --autosome-num 28 --autosome
 
