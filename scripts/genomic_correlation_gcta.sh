@@ -125,3 +125,48 @@ $GCTA_PATH/gcta64 --reml-bivar \
 		  --pheno genomic_correlation/weight/pheno.txt \
 		  --covar genomic_correlation/weight/cc.txt \
 		  --out genomic_correlation/weight/gcta_bivar
+
+
+
+## Bovans weight
+
+$PLINK_PATH/plink --allow-extra-chr \
+		  --chr-set 40 \
+		  --file gwas/all_bovans \
+		  --make-bed \
+		  --out genomic_correlation/weight_bovans/all_bovans \
+		  --maf 0.0001 \
+		  --chr 1-28
+
+$GCTA_PATH/gcta64 --bfile genomic_correlation/weight_bovans/all_bovans \
+		  --make-grm-bin \
+		  --make-grm-alg 1 \
+		  --out genomic_correlation/weight_bovans/gcta \
+		  --autosome-num 28 --autosome
+
+$GCTA_PATH/gcta64 --reml-bivar \
+		  --grm-bin genomic_correlation/weight_bovans/gcta \
+		  --pheno genomic_correlation/weight_bovans/pheno.txt \
+		  --out genomic_correlation/weight_bovans/gcta_bivar
+
+
+## LSL weight
+
+$PLINK_PATH/plink --allow-extra-chr \
+		  --chr-set 40 \
+		  --file gwas/all_lsl \
+		  --make-bed \
+		  --out genomic_correlation/weight_lsl/all_lsl \
+		  --maf 0.0001 \
+		  --chr 1-28
+
+$GCTA_PATH/gcta64 --bfile genomic_correlation/weight_bovans/all_lsl \
+		  --make-grm-bin \
+		  --make-grm-alg 1 \
+		  --out genomic_correlation/weight_lsl/gcta \
+		  --autosome-num 28 --autosome
+
+$GCTA_PATH/gcta64 --reml-bivar \
+		  --grm-bin genomic_correlation/weight_lsl/gcta \
+		  --pheno genomic_correlation/weight_lsl/pheno.txt \
+		  --out genomic_correlation/weight_lsl/gcta_bivar
