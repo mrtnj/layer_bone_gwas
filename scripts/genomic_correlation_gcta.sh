@@ -5,7 +5,7 @@ GCTA_PATH=~/tools/gcta/
 
 set -eu
 
-## Load
+## Load, both crosses combined
 
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
@@ -91,7 +91,7 @@ $GCTA_PATH/gcta64 --reml-bivar \
 		  
 
 
-## Weight
+## Weight, both crosses combined
 
 $PLINK_PATH/plink --allow-extra-chr \
 		  --chr-set 40 \
