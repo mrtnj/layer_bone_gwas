@@ -339,7 +339,7 @@ fits_ct <- models_ct$fits
 fits_ct$pretty_name <- rep(c("QCT PC1 'high density, thickness, content'",
                              "QCT PC2 'long bone length'",
                              "QCT PC3 'low cortical density'"),
-                            each = 2)
+                            each = 4)
 
 
 combined_tga_ct_fits <- rbind(fits_tga,
