@@ -9,11 +9,14 @@ library(tidyr)
 
 system("mkdir genomic_correlation")
 system("mkdir genomic_correlation/load_N")
+system("mkdir genomic_correlation/load_N_bovans")
+system("mkdir genomic_correlation/load_N_lsl")
 system("mkdir genomic_correlation/weight")
-system("mkdir genomic_correlation/comb")
+system("mkdir genomic_correlation/weight_bovans")
+system("mkdir genomic_correlation/weight_lsl")
 
 
-## Fam file
+## Fam file 
 
 all_load <- read_delim("gwas/all_load_N/all_load_N.fam",
                        delim = " ",
@@ -24,12 +27,12 @@ all_missing <- is.na(all_load$X6)
 ##all_load <- all_load[!all_missing,]
 
 
-
-write.table(all_load,
-            file = "genomic_correlation/load_N/all.fam",
-            quote = FALSE,
-            row.names = FALSE,
-            col.names = FALSE)
+# 
+# write.table(all_load,
+#             file = "genomic_correlation/load_N/all.fam",
+#             quote = FALSE,
+#             row.names = FALSE,
+#             col.names = FALSE)
 
 
 all_weight <- read_delim("gwas/all_weight/all_weight.fam",
@@ -41,12 +44,20 @@ all_weight_missing <- is.na(all_weight$X6)
 ## all_weight <- all_weight[!all_weight_missing,]
 
 
-write.table(all_weight,
-            file = "genomic_correlation/weight/all.fam",
-            quote = FALSE,
-            row.names = FALSE,
-            col.names = FALSE)
+# write.table(all_weight,
+#             file = "genomic_correlation/weight/all.fam",
+#             quote = FALSE,
+#             row.names = FALSE,
+#             col.names = FALSE)
 
+
+bovans_all <- read_delim("gwas/all_bovans.fam",
+                         delim = " ",
+                         col_names = FALSE)
+
+lsl_all <- read_delim("gwas/all_lsl.fam",
+                      delim = " ",
+                      col_names = FALSE)
 
 
 
@@ -57,7 +68,7 @@ pheno <- readRDS("outputs/pheno.Rds")
 
 load_covar <- filter(pheno,
                      animal_id %in% all_load$X1)[, c("animal_id", "group", "weight",
-                                                     "breed", "cage.pen", "load_N", "comb_g")]
+                                                     "breed", "cage.pen", "load_N")]
 
 assert_that(identical(load_covar$animal_id, all_load$X1))
 
@@ -68,6 +79,28 @@ weight_covar <- filter(pheno,
                                                "breed", "cage.pen")]
 
 assert_that(identical(weight_covar$animal_id, all_weight$X1))
+
+
+## Crosses separate
+
+load_covar_bovans <- filter(pheno,
+                            animal_id %in% bovans_all$X1)[, c("animal_id", "group", "weight",
+                                                              "breed", "cage.pen", "load_N")]
+
+
+load_covar_lsl <- filter(pheno,
+                         animal_id %in% lsl_all$X1)[, c("animal_id", "group", "weight",
+                                                        "breed", "cage.pen", "load_N")]
+
+
+weight_covar_bovans <- filter(pheno,
+                              animal_id %in% bovans_all$X1)[, c("animal_id", "group", "weight",
+                                                                "breed", "cage.pen")]
+
+
+weight_covar_lsl <- filter(pheno,
+                           animal_id %in% lsl_all$X1)[, c("animal_id", "group", "weight",
+                                                          "breed", "cage.pen")]
 
 
 
@@ -81,14 +114,23 @@ load_covar$cage_load <- ifelse(load_covar$cage.pen == "CAGE",
                                load_covar$load_N,
                                NA)
 
+load_covar_bovans$pen_load <- ifelse(load_covar_bovans$cage.pen == "PEN",
+                                     load_covar_bovans$load_N,
+                                     NA)
 
-load_covar$pen_comb <- ifelse(load_covar$cage.pen == "PEN",
-                              load_covar$comb_g,
-                              NA)
+load_covar_bovans$cage_load <- ifelse(load_covar_bovans$cage.pen == "CAGE",
+                                      load_covar_bovans$load_N,
+                                      NA)
 
-load_covar$cage_comb <- ifelse(load_covar$cage.pen == "CAGE",
-                               load_covar$comb_g,
-                               NA)
+load_covar_lsl$pen_load <- ifelse(load_covar_lsl$cage.pen == "PEN",
+                                  load_covar_lsl$load_N,
+                                  NA)
+
+load_covar_lsl$cage_load <- ifelse(load_covar_lsl$cage.pen == "CAGE",
+                                   load_covar_lsl$load_N,
+                                   NA)
+
+
 
 
 weight_covar$pen_weight <- ifelse(weight_covar$cage.pen == "PEN",
@@ -100,6 +142,23 @@ weight_covar$cage_weight <- ifelse(weight_covar$cage.pen == "CAGE",
                                    NA)
 
 
+weight_covar_bovans$pen_weight <- ifelse(weight_covar_bovans$cage.pen == "PEN",
+                                         weight_covar_bovans$weight,
+                                         NA)
+
+weight_covar_bovans$cage_weight <- ifelse(weight_covar_bovans$cage.pen == "CAGE",
+                                          weight_covar_bovans$weight,
+                                          NA)
+
+weight_covar_lsl$pen_weight <- ifelse(weight_covar_lsl$cage.pen == "PEN",
+                                      weight_covar_lsl$weight,
+                                      NA)
+
+weight_covar_lsl$cage_weight <- ifelse(weight_covar_lsl$cage.pen == "CAGE",
+                                       weight_covar_lsl$weight,
+                                       NA)
+
+
 
 
 write.table(load_covar[, c("animal_id", "animal_id",
@@ -109,12 +168,23 @@ write.table(load_covar[, c("animal_id", "animal_id",
             col.names = FALSE,
             row.names = FALSE)
 
-write.table(load_covar[, c("animal_id", "animal_id",
-                          "cage_comb", "pen_comb")],
-            file = "genomic_correlation/comb/pheno_comb.txt",
+
+write.table(load_covar_bovans[, c("animal_id", "animal_id",
+                                  "cage_load", "pen_load")],
+            file = "genomic_correlation/load_N_bovans/pheno.txt",
             quote = FALSE,
             col.names = FALSE,
             row.names = FALSE)
+
+
+write.table(load_covar_lsl[, c("animal_id", "animal_id",
+                                  "cage_load", "pen_load")],
+            file = "genomic_correlation/load_N_lsl/pheno.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+
 
 write.table(weight_covar[, c("animal_id", "animal_id",
                              "cage_weight", "pen_weight")],
@@ -122,6 +192,23 @@ write.table(weight_covar[, c("animal_id", "animal_id",
             quote = FALSE,
             col.names = FALSE,
             row.names = FALSE)
+
+
+write.table(weight_covar_bovans[, c("animal_id", "animal_id",
+                                    "cage_weight", "pen_weight")],
+            file = "genomic_correlation/weight_bovans/pheno.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+
+write.table(weight_covar_lsl[, c("animal_id", "animal_id",
+                                 "cage_weight", "pen_weight")],
+            file = "genomic_correlation/weight_lsl/pheno.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
 
 
 ## Categorical covariates
@@ -133,6 +220,8 @@ write.table(load_covar[, c("animal_id", "animal_id",
             col.names = FALSE,
             row.names = FALSE)
 
+
+
 ## Quantitative covariates
 
 write.table(load_covar[, c("animal_id", "animal_id",
@@ -141,6 +230,23 @@ write.table(load_covar[, c("animal_id", "animal_id",
             quote = FALSE,
             col.names = FALSE,
             row.names = FALSE)
+
+
+write.table(load_covar_bovans[, c("animal_id", "animal_id",
+                                  "weight")],
+            file = "genomic_correlation/load_N_bovans/qc.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
+
+write.table(load_covar_lsl[, c("animal_id", "animal_id",
+                               "weight")],
+            file = "genomic_correlation/load_N_lsl/qc.txt",
+            quote = FALSE,
+            col.names = FALSE,
+            row.names = FALSE)
+
 
 
 ## Categorical covariates for weight

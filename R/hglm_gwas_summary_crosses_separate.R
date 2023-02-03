@@ -8,8 +8,10 @@ library(patchwork)
 library(readr)
 library(stringr)
 library(tidyr)
+library(purrr)
 library(patchwork)
 
+source("R/hglm_helper_functions.R")
 source("R/gwas_helper_functions.R")
 
 
@@ -184,7 +186,7 @@ chr_breaks$chr_masked[11:32] <- ""
 formatting <- list(geom_hline(yintercept = -log10(5e-8),
                               colour = "red",
                               linetype = 2),
-                   geom_hline(yintercept = -log10(1e-4),
+                   geom_hline(yintercept = -log10(1e-5),
                               colour = "blue",
                               linetype = 2),
                    theme_bw(),
@@ -247,7 +249,7 @@ plot_manhattan_load_combined <- ggarrange(plot_manhattan_cage_bovans_load,
                                           byrow = FALSE)
 
 
-pdf("figures/plot_manhattan_crosses_separate_load.pdf")
+pdf("figures/plot_manhattan_crosses_separate_load.pdf", width = 10)
 print(plot_manhattan_load_combined)
 dev.off()
 
@@ -302,7 +304,7 @@ plot_manhattan_weight_combined <- ggarrange(plot_manhattan_cage_bovans_weight,
                                             ncol = 2,
                                             byrow = FALSE)
 
-pdf("figures/plot_manhattan_crosses_separate_weight.pdf")
+pdf("figures/plot_manhattan_crosses_separate_weight.pdf", width = 10)
 print(plot_manhattan_weight_combined)
 dev.off()
 
@@ -337,6 +339,11 @@ plot_qq_load_combined <- ggarrange(plot_qq_cage_bovans_load,
                                    ncol = 2,
                                    byrow = FALSE)
 
+pdf("figures/plot_qq_crosses_separate_load.pdf", width = 10)
+print(plot_qq_load_combined)
+dev.off()
+
+
 
 
 plot_qq_cage_bovans_weight <- plot_qq(gwas_cage_bovans_weight$p) +
@@ -369,6 +376,11 @@ plot_qq_weight_combined <- ggarrange(plot_qq_cage_bovans_weight,
                                      plot_qq_all_lsl_weight,
                                      ncol = 2,
                                      byrow = FALSE)
+
+
+pdf("figures/plot_qq_crosses_separate_weight.pdf", width = 10)
+print(plot_qq_weight_combined)
+dev.off()
 
 
 
@@ -477,9 +489,13 @@ plot_crosses_comparisons <- wrap_plots(list(plot_crosses_load_comparison_p,
 
 
 
-pdf("figures/plot_gwas_comparison_crosses_separate.pdf")
+pdf("figures/plot_gwas_comparison_crosses_separate.pdf", width = 10)
 print(plot_crosses_comparisons)
 dev.off()
+
+
+
+
 
 
 
@@ -529,7 +545,7 @@ supplementary_weight_table <- rbind(transform(gwas_pen_bovans_weight[, -7],
 
 
 supplementary_suggestive_load <- filter(supplementary_load_table,
-                                        p < 1e-4)
+                                        p < 1e-5)
 supplementary_suggestive_load <-
     supplementary_suggestive_load[order(as.numeric(supplementary_suggestive_load$chr),
                                         supplementary_suggestive_load$ps),]
@@ -554,3 +570,195 @@ write_csv(supplementary_suggestive_load,
 write_csv(supplementary_suggestive_weight, 
           "tables/supplementary_table_weight_crosses_separate_hits.csv")
 
+
+
+
+
+## Regions to zoom in
+
+plot_hit <- function(hit, formatting) {
+    qplot(x = ps/1e6, y = -log10(p), data = hit) +
+        formatting
+}
+
+weight_bovans_chr4 <- filter(gwas_all_bovans_weight,
+                             chr == 4 &
+                                 ps > 75748329 - 2e6 &
+                                 ps < 75850294 + 2e6)
+
+weight_lsl_chr4 <- filter(gwas_all_lsl_weight,
+                          chr == 4 &
+                              ps > 75748329 - 2e6 &
+                              ps < 75850294 + 2e6)
+
+weight_bovans_chr6 <- filter(gwas_all_bovans_weight,
+                             chr == 6 &
+                                 ps > 11477631 - 2e6 &
+                                 ps < 11477631 + 2e6)
+
+weight_lsl_chr6 <- filter(gwas_all_lsl_weight,
+                          chr == 6 &
+                              ps > 11477631 - 2e6 &
+                              ps < 11477631 + 2e6)
+
+weight_bovans_chr27 <- filter(gwas_all_bovans_weight,
+                              chr == 27 &
+                                  ps > 6070932 - 2e6 &
+                                  ps < 6087051 + 2e6)
+
+
+weight_lsl_chr27 <- filter(gwas_all_lsl_weight,
+                              chr == 27 &
+                                  ps > 6070932 - 2e6 &
+                                  ps < 6087051 + 2e6)
+
+
+formatting_weight_hits <- list(geom_hline(yintercept = -log10(5e-8),
+                                          colour = "blue",
+                                          linetype = 2),
+                               theme_bw(),
+                               theme(panel.grid = element_blank(),
+                                     strip.background = element_blank()),
+                               ylim(0, 17),
+                               xlab("Position (Mbp)"),
+                               ylab("-log(p)"))
+
+
+plot_weight_hits <- plot_hit(weight_bovans_chr4, formatting_weight_hits) +
+    ggtitle("Body weight, chr 4 (Bovans)") +
+    plot_hit(weight_lsl_chr4, formatting_weight_hits) +
+    ggtitle("Body weight, chr 4 (LSL)") +
+    plot_hit(weight_bovans_chr6, formatting_weight_hits) +
+    ggtitle("Body weight, chr 6 (Bovans)") + 
+    plot_hit(weight_lsl_chr6, formatting_weight_hits) +
+    ggtitle("Body weight, chr 6 (LSL)") + 
+    plot_hit(weight_bovans_chr27, formatting_weight_hits) +
+    ggtitle("Body weight, chr 27 (Bovans)") + 
+    plot_hit(weight_lsl_chr27, formatting_weight_hits) +
+    ggtitle("Body weight, chr 27 (Bovans)") + 
+    plot_layout(ncol = 2)
+
+
+pdf("figures/plot_weight_hits_crosses_separate.pdf",
+    width = 10)
+print(plot_weight_hits)
+dev.off()
+
+
+
+
+load_chr2_cage <- filter(gwas_cage_bovans_load,
+                         chr == 2 & 
+                             ps > 125198709 - 2e6 &
+                             ps < 125198709 + 2e6)
+
+load_chr2_pen <- filter(gwas_pen_bovans_load,
+                        chr == 2 & 
+                            ps > 125198709 - 2e6 &
+                            ps < 125198709 + 2e6)
+
+
+load_chr3_cage <- filter(gwas_cage_lsl_load,
+                         chr == 3 & 
+                             ps > 2430687 - 2e6 &
+                             ps < 2430687 + 2e6)
+
+load_chr3_pen <- filter(gwas_pen_lsl_load,
+                        chr == 3 & 
+                            ps > 2430687 - 2e6 &
+                            ps < 2430687 + 2e6)
+
+load_chr10_cage <- filter(gwas_cage_bovans_load,
+                          chr == 10 & 
+                              ps > 7029216 - 2e6 &
+                              ps < 7029216 + 2e6)
+
+load_chr10_pen <- filter(gwas_pen_bovans_load,
+                         chr == 10 & 
+                             ps > 7029216 - 2e6 &
+                             ps < 7029216 + 2e6)
+
+
+load_chr11_cage <- filter(gwas_cage_lsl_load,
+                          chr == 11 & 
+                              ps > 18432763 - 2e6 &
+                              ps < 18432763 + 2e6)
+
+load_chr11_pen <- filter(gwas_pen_lsl_load,
+                         chr == 11 & 
+                             ps > 18432763 - 2e6 &
+                             ps < 18432763 + 2e6)
+
+
+
+
+formatting_load_hits <- list(geom_hline(yintercept = -log10(1e-5),
+                                        colour = "blue",
+                                        linetype = 2),
+                             theme_bw(),
+                             theme(panel.grid = element_blank(),
+                                   strip.background = element_blank()),
+                             ylim(0, 8),
+                             xlab("Position (Mbp)"),
+                             ylab("-log(p)"))
+
+
+
+plot_load_hits <- plot_hit(load_chr2_cage, formatting_load_hits) +
+    ggtitle("Bone strength, chr 2 (Bovans, CAGE)") +
+    plot_hit(load_chr2_pen, formatting_load_hits) +
+    ggtitle("Bone strength, chr 2 (Bovans, PEN)") +
+    plot_hit(load_chr3_cage, formatting_load_hits) +
+    ggtitle("Bone strength, chr 3 (LSL, CAGE)") +
+    plot_hit(load_chr3_pen, formatting_load_hits) +
+    ggtitle("Bone strength, chr 3 (LSL, PEN)") +
+    plot_hit(load_chr10_cage, formatting_load_hits) +
+    ggtitle("Bone strength, chr 10 (Bovans, CAGE)") +
+    plot_hit(load_chr10_pen, formatting_load_hits) +
+    ggtitle("Bone strength, chr 10 (Bovans, PEN)") +
+    plot_hit(load_chr11_cage, formatting_load_hits) +
+    ggtitle("Bone strength, chr 11 (LSL, CAGE)") +
+    plot_hit(load_chr11_pen, formatting_load_hits) +
+    ggtitle("Bone strength, chr 11 (LSL, PEN)") +
+    plot_layout(ncol = 2)
+
+pdf("figures/plot_load_hits_crosses_separate.pdf",
+    width = 10)
+print(plot_load_hits)
+dev.off()
+
+
+
+
+
+## Conditional GWAS
+
+gwas_weight_conditional <- readRDS("gwas/hglm_gwas_all_weight_conditional.Rds")
+
+gwas_weight_conditional$marker_id <- clean_marker_id(gwas_weight_conditional$marker_id)
+
+gwas_weight_conditional <- inner_join(map, gwas_weight_conditional)
+
+gwas_weight_conditional$global_pos <- flatten_coordinates(gwas_weight_conditional$chr,
+                                                          gwas_weight_conditional$ps,
+                                                          chr_lengths)
+
+
+
+
+combined_conditional <- rbind(transform(filter(gwas_all_lsl_weight, chr == 4),
+                                        scan = "Default"),
+                              transform(filter(gwas_weight_conditional, chr == 4),
+                                        scan = "Conditional"))
+
+plot_conditional <- qplot(x = ps/1e6, y = -log10(p),
+                          colour = scan,
+                          data = combined_conditional) +
+    formatting +
+    ggtitle("Conditional GWAS of body weight on chromosome 4")
+
+
+
+pdf("figures/plot_chr4_conditional_lsl.pdf")
+print(plot_conditional)
+dev.off()

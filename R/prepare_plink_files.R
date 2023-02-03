@@ -216,7 +216,7 @@ for (trait_ix in 1:length(traits)) {
     
 }
 
-traits_breed <- traits[1:2]
+traits_breed <- traits[1:5]
 
 for (trait_ix in 1:length(traits_breed)) {
     

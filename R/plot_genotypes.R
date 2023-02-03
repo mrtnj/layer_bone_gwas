@@ -204,3 +204,7 @@ f_bovans <- colSums(geno_bovans[, -1], na.rm = TRUE)/2/nonmissing_bovans
 plot_frequency_comparion <- qplot(x = f_bovans,
                                   y = f_LSL) /
   qplot(x = f_bovans - f_LSL)
+
+
+
+cor(f_bovans, f_LSL, use = "p")

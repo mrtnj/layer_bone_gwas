@@ -27,7 +27,7 @@ names(scans) <- c("Bovans, PEN", "Bovans, CAGE", "LSL, PEN", "LSL, CAGE")
 
 n <- map_dfr(scans,
              get_n,
-             .id = "san")
+             .id = "scan")
 
 write.csv(n,
           file = "tables/supplementary_table_sample_size.csv",

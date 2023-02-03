@@ -1,12 +1,12 @@
 ## Get data
 
-pen_load <- read_data("gwas/pen_load_N/pen_load_N.fam")
-cage_load <- read_data("gwas/cage_load_N/cage_load_N.fam")
-all_load <- read_data("gwas/all_load_N/all_load_N.fam")
+pen_load <- read_data("gwas/fam_pen_load_N.fam")
+cage_load <- read_data("gwas/fam_cage_load_N.fam")
+all_load <- read_data("gwas/fam_all_load_N.fam")
 
-pen_weight <- read_data("gwas/pen_weight/pen_weight.fam")
-cage_weight <- read_data("gwas/cage_weight/cage_weight.fam")
-all_weight <- read_data("gwas/all_weight/all_weight.fam")
+pen_weight <- read_data("gwas/fam_pen_weight.fam")
+cage_weight <- read_data("gwas/fam_cage_weight.fam")
+all_weight <- read_data("gwas/fam_all_weight.fam")
 
 
 ## Load GRM from Gemma and decompose

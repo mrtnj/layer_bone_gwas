@@ -122,7 +122,7 @@ chr_breaks$chr_masked[11:32] <- ""
 formatting <- list(geom_hline(yintercept = -log10(5e-8),
                               colour = "red",
                               linetype = 2),
-                   geom_hline(yintercept = -log10(1e-4),
+                   geom_hline(yintercept = -log10(1e-5),
                               colour = "blue",
                               linetype = 2),
                    theme_bw(),
@@ -258,7 +258,7 @@ colnames(supplementary_table)[1] <- "trait"
 
 
 supplementary_suggestive <- filter(supplementary_table,
-                                   p < 1e-4)
+                                   p < 1e-5)
 supplementary_suggestive <-
     supplementary_suggestive[order(as.numeric(supplementary_suggestive$chr),
                                    supplementary_suggestive$ps),]
