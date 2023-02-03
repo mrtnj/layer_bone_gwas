@@ -10,7 +10,7 @@ sequences for alignment.
 
 * scripts/markers_run_blat.sh -- Use Blat to align sequences to Galgal6
 
-* R/markers_filter_alignment.R -- Read output from Blat mand make a map file with
+* R/markers_filter_alignment.R -- Read output from Blat and make a map file with
 new positions.
 
 
@@ -41,7 +41,15 @@ to create ped and phenotype files
 
 * R/hglm_gwas_prepare_data.R -- Set up data for main bone and body weight GWAS
 
-* R/hglm_gwas.R -- Main GWAS analysis of bone and body weight
+* R/hglm_gwas_prepare_data_crosses_separate.R -- Separate crossbred analysis
+
+* R/hglm_gwas_summary_crosses_separate.R -- Main analysis of GWAS of bone and
+body weight with separate crossbreds
+
+* R/hglm_gwas_summary_pqct_crosses_separate.R -- Main analysis of GWAS of QCT 
+phenotypes with separate crossbreds
+
+* R/hglm_gwas.R -- Old joint GWAS analysis of bone and body weight
 
 * R/hglm_gwas_tga_prepare_data.R -- Set up data for QCT and TGA GWAS
 
@@ -54,7 +62,9 @@ to create ped and phenotype files
 
 ## GWAS results
 
-* R/hglm_gwas_summary.R -- Summarise main GWAS results
+* R/R/hglm_gwas_overlap_crosses_separate.R -- Summarise main GWAS results
+
+* R/hglm_gwas_summary.R -- Old joint GWAS analysis
 
 * R/hglm_gwas_summary_pqct_tga.R -- Summarise QCT and TGA GWAS
 
@@ -68,4 +78,6 @@ to create ped and phenotype files
 * R/genomic_correlation_prepare_files.R -- Prepare data for genomic correlation with GCTA
 
 * scripts/genomic_correlation_gcta.sh -- Run bivariate genomic model with GCTA
+
+
 
